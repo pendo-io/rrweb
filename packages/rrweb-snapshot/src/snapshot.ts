@@ -554,6 +554,11 @@ function serializeNode(
         keepIframeSrcFn,
         newlyAddedElement,
         rootId,
+        maskAllText,
+        maskTextClass,
+        unmaskTextClass,
+        maskTextSelector,
+        unmaskTextSelector,
       });
     case n.TEXT_NODE:
       return serializeTextNode(n as Text, {
@@ -683,6 +688,11 @@ function serializeElementNode(
      */
     newlyAddedElement?: boolean;
     rootId: number | undefined;
+    maskAllText: boolean;
+    maskTextClass: string | RegExp;
+    unmaskTextClass: string | RegExp;
+    maskTextSelector: string | null;
+    unmaskTextSelector: string | null;
   },
 ): serializedNode | false {
   const {
@@ -698,6 +708,11 @@ function serializeElementNode(
     keepIframeSrcFn,
     newlyAddedElement = false,
     rootId,
+    maskAllText,
+    maskTextClass,
+    unmaskTextClass,
+    maskTextSelector,
+    unmaskTextSelector,
   } = options;
   const needBlock = _isBlockedElement(n, blockClass, blockSelector);
   const tagName = getValidTagName(n);
@@ -752,12 +767,21 @@ function serializeElementNode(
       attributes.type !== 'button' &&
       value
     ) {
+      const forceMask = needMaskingText(
+        n,
+        maskTextClass,
+        maskTextSelector,
+        unmaskTextClass,
+        unmaskTextSelector,
+        maskAllText,
+      );
       attributes.value = maskInputValue({
         type: attributes.type,
         tagName,
         value,
         maskInputOptions,
         maskInputFn,
+        forceMask,
       });
     } else if (checked) {
       attributes.checked = checked;

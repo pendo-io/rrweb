@@ -1,4 +1,9 @@
-import { MaskInputOptions, maskInputValue, Mirror } from 'rrweb-snapshot';
+import {
+  MaskInputOptions,
+  maskInputValue,
+  Mirror,
+  needMaskingText,
+} from 'rrweb-snapshot';
 import type { FontFaceSet } from 'css-font-loading-module';
 import {
   throttle,
@@ -339,6 +344,11 @@ function initInputObserver({
   maskInputFn,
   sampling,
   userTriggeredOnInput,
+  maskAllText,
+  maskTextClass,
+  unmaskTextClass,
+  maskTextSelector,
+  unmaskTextSelector,
 }: observerParam): listenerHandler {
   function eventHandler(event: Event) {
     let target = getEventTarget(event);
@@ -363,13 +373,22 @@ function initInputObserver({
     }
     let text = (target as HTMLInputElement).value;
     let isChecked = false;
+    const forceMask = needMaskingText(
+      target as Node,
+      maskTextClass,
+      maskTextSelector,
+      unmaskTextClass,
+      unmaskTextSelector,
+      maskAllText,
+    );
     if (type === 'radio' || type === 'checkbox') {
       isChecked = (target as HTMLInputElement).checked;
     } else if (
       maskInputOptions[
         (target as Element).tagName.toLowerCase() as keyof MaskInputOptions
       ] ||
-      maskInputOptions[type as keyof MaskInputOptions]
+      maskInputOptions[type as keyof MaskInputOptions] ||
+      forceMask
     ) {
       text = maskInputValue({
         maskInputOptions,
@@ -377,6 +396,7 @@ function initInputObserver({
         type,
         value: text,
         maskInputFn,
+        forceMask,
       });
     }
     cbWithDedup(

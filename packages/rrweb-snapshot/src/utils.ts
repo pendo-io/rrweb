@@ -153,17 +153,20 @@ export function maskInputValue({
   type,
   value,
   maskInputFn,
+  forceMask,
 }: {
   maskInputOptions: MaskInputOptions;
   tagName: string;
   type: string | number | boolean | null;
   value: string | null;
   maskInputFn?: MaskInputFn;
+  forceMask?: boolean;
 }): string {
   let text = value || '';
   if (
     maskInputOptions[tagName.toLowerCase() as keyof MaskInputOptions] ||
-    maskInputOptions[type as keyof MaskInputOptions]
+    maskInputOptions[type as keyof MaskInputOptions] ||
+    forceMask
   ) {
     if (maskInputFn) {
       text = maskInputFn(text);
