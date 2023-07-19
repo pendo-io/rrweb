@@ -7,6 +7,7 @@ import {
   serializeNodeWithId,
   _isBlockedElement,
   needMaskingText,
+  MaskingCache,
 } from '../src/snapshot';
 import { serializedNodeWithId } from '../src/types';
 import { Mirror } from '../src/utils';
@@ -235,17 +236,17 @@ describe('needMaskingText', () => {
   it('should not mask by default', () => {
     const el = render(`<div class='foo'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, false),
+      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, false, new MaskingCache()),
     ).toEqual(false);
   });
 
   it('should mask if the masking class is matched', () => {
     const el = render(`<div class='foo maskmask'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, false),
+      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, false, new MaskingCache()),
     ).toEqual(true);
     expect(
-      needMaskingText(el, /^maskmask$/, null, /^unmaskmask$/, null, false),
+      needMaskingText(el, /^maskmask$/, null, /^unmaskmask$/, null, false, new MaskingCache()),
     ).toEqual(true);
   });
 
@@ -261,6 +262,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
     expect(
@@ -271,6 +273,7 @@ describe('needMaskingText', () => {
         /^unmaskmask$/,
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
   });
@@ -278,7 +281,7 @@ describe('needMaskingText', () => {
   it('should mask if the masking selector is matched', () => {
     const el = render(`<div class='foo'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', '.foo', 'unmaskmask', null, false),
+      needMaskingText(el, 'maskmask', '.foo', 'unmaskmask', null, false, new MaskingCache()),
     ).toEqual(true);
   });
 
@@ -292,6 +295,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
   });
@@ -299,17 +303,17 @@ describe('needMaskingText', () => {
   it('should mask by default', () => {
     const el = render(`<div class='foo'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, true),
+      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, true, new MaskingCache()),
     ).toEqual(true);
   });
 
   it('should not mask if the un-masking class is matched', () => {
     const el = render(`<div class='foo unmaskmask'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, true),
+      needMaskingText(el, 'maskmask', null, 'unmaskmask', null, true, new MaskingCache()),
     ).toEqual(false);
     expect(
-      needMaskingText(el, /^maskmask$/, null, /^unmaskmask$/, null, true),
+      needMaskingText(el, /^maskmask$/, null, /^unmaskmask$/, null, true, new MaskingCache()),
     ).toEqual(false);
   });
 
@@ -325,6 +329,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         null,
         true,
+        new MaskingCache(),
       ),
     ).toEqual(false);
     expect(
@@ -335,6 +340,7 @@ describe('needMaskingText', () => {
         /^unmaskmask$/,
         null,
         true,
+        new MaskingCache(),
       ),
     ).toEqual(false);
   });
@@ -351,6 +357,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
     expect(
@@ -361,6 +368,7 @@ describe('needMaskingText', () => {
         /^unmaskmask$/,
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
   });
@@ -377,6 +385,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(false);
     expect(
@@ -387,6 +396,7 @@ describe('needMaskingText', () => {
         /^unmaskmask$/,
         null,
         false,
+        new MaskingCache(),
       ),
     ).toEqual(false);
   });
@@ -394,7 +404,7 @@ describe('needMaskingText', () => {
   it('should not mask if the unmasking selector is matched', () => {
     const el = render(`<div class='foo'>Lorem ipsum</div>`);
     expect(
-      needMaskingText(el, 'maskmask', null, 'unmaskmask', '.foo', true),
+      needMaskingText(el, 'maskmask', null, 'unmaskmask', '.foo', true, new MaskingCache()),
     ).toEqual(false);
   });
 
@@ -408,6 +418,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         '.foo',
         true,
+        new MaskingCache(),
       ),
     ).toEqual(false);
   });
@@ -424,6 +435,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         '.foo',
         false,
+        new MaskingCache(),
       ),
     ).toEqual(true);
   });
@@ -440,6 +452,7 @@ describe('needMaskingText', () => {
         'unmaskmask',
         '.foo',
         false,
+        new MaskingCache(),
       ),
     ).toEqual(false);
   });

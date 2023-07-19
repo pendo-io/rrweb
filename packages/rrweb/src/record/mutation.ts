@@ -10,6 +10,7 @@ import {
   isNativeShadowDom,
   getInputType,
   toLowerCase,
+  MaskingCache,
 } from 'rrweb-snapshot';
 import type { observerParam, MutationBufferParam } from '../types';
 import type {
@@ -506,6 +507,7 @@ export default class MutationBuffer {
                 this.unmaskTextClass,
                 this.unmaskTextSelector,
                 this.maskAllText,
+                new MaskingCache(),
               ) && value
                 ? this.maskTextFn
                   ? this.maskTextFn(value)
@@ -531,6 +533,7 @@ export default class MutationBuffer {
             this.unmaskTextClass,
             this.unmaskTextSelector,
             this.maskAllText,
+            new MaskingCache(),
           );
 
           value = maskInputValue({

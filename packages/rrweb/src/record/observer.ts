@@ -5,6 +5,7 @@ import {
   getInputType,
   toLowerCase,
   needMaskingText,
+  MaskingCache,
 } from 'rrweb-snapshot';
 import type { FontFaceSet } from 'css-font-loading-module';
 import {
@@ -469,6 +470,7 @@ function initInputObserver({
       unmaskTextClass,
       unmaskTextSelector,
       maskAllText,
+      new MaskingCache(),
     );
 
     if (type === 'radio' || type === 'checkbox') {

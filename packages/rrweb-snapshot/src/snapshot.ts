@@ -339,7 +339,7 @@ function distanceToMatch(
 
 function createMatchPredicate(
   className: string | RegExp | null,
-  selector: string | null,
+  selector: string | null
 ): (node: Node) => boolean {
   return (node: Node) => {
     const el = node as HTMLElement;
@@ -347,16 +347,62 @@ function createMatchPredicate(
 
     if (className) {
       if (typeof className === 'string') {
-        if (el.matches(`.${className}`)) return true;
+        if (el.matches(`.${className}`)) {
+          return true;
+        }
       } else if (elementClassMatchesRegex(el, className)) {
         return true;
       }
     }
 
-    if (selector && el.matches(selector)) return true;
+    if (selector) {
+      if (el.matches(selector)) {
+        return true;
+      }
+    }
 
     return false;
   };
+}
+
+export function _needMaskingText(
+  el: HTMLElement,
+  maskedFn: (node: Node) => boolean,
+  unmaskedFn: (node: Node) => boolean,
+  maskAllText: boolean,
+  maskingCache: MaskingCache,
+): boolean {
+  if (maskingCache.has(el)) {
+    return maskingCache.get(el);
+  }
+
+  let result = null;
+
+  if (unmaskedFn(el)) {
+    result = false;
+  }
+
+  if (maskedFn(el)) {
+    result = true;
+  }
+
+  if (result == null) {
+    if (el.parentElement) {
+      result = _needMaskingText(
+        el.parentElement,
+        maskedFn,
+        unmaskedFn,
+        maskAllText,
+        maskingCache,
+      );
+    } else {
+      result = maskAllText;
+    }
+  }
+
+  maskingCache.set(el, result);
+
+  return result;
 }
 
 export function needMaskingText(
@@ -366,6 +412,7 @@ export function needMaskingText(
   unmaskTextClass: string | RegExp | null,
   unmaskTextSelector: string | null,
   maskAllText: boolean,
+  maskingCache: MaskingCache,
 ): boolean {
   try {
     const el: HTMLElement | null =
@@ -374,48 +421,16 @@ export function needMaskingText(
         : node.parentElement;
     if (el === null) return false;
 
-    let maskDistance = -1;
-    let unmaskDistance = -1;
+    const maskFn = createMatchPredicate(maskTextClass, maskTextSelector);
+    const unmaskFn = createMatchPredicate(unmaskTextClass, unmaskTextSelector);
 
-    if (maskAllText) {
-      unmaskDistance = distanceToMatch(
-        el,
-        createMatchPredicate(unmaskTextClass, unmaskTextSelector),
-      );
-
-      if (unmaskDistance < 0) {
-        return true;
-      }
-
-      maskDistance = distanceToMatch(
-        el,
-        createMatchPredicate(maskTextClass, maskTextSelector),
-        unmaskDistance >= 0 ? unmaskDistance : Infinity,
-      );
-    } else {
-      maskDistance = distanceToMatch(
-        el,
-        createMatchPredicate(maskTextClass, maskTextSelector),
-      );
-
-      if (maskDistance < 0) {
-        return false;
-      }
-
-      unmaskDistance = distanceToMatch(
-        el,
-        createMatchPredicate(unmaskTextClass, unmaskTextSelector),
-        maskDistance >= 0 ? maskDistance : Infinity,
-      );
-    }
-
-    return maskDistance >= 0
-      ? unmaskDistance >= 0
-        ? maskDistance <= unmaskDistance
-        : true
-      : unmaskDistance >= 0
-      ? false
-      : !!maskAllText;
+    return _needMaskingText(
+      el,
+      maskFn,
+      unmaskFn,
+      maskAllText,
+      maskingCache,
+    );
   } catch (e) {
     //
   }
@@ -519,6 +534,7 @@ function serializeNode(
     unmaskTextClass: string | RegExp | null;
     maskTextSelector: string | null;
     unmaskTextSelector: string | null;
+    maskingCache: MaskingCache;
     inlineStylesheet: boolean;
     maskInputOptions: MaskInputOptions;
     maskTextFn: MaskTextFn | undefined;
@@ -547,6 +563,7 @@ function serializeNode(
     maskInputOptions = {},
     maskTextFn,
     maskInputFn,
+    maskingCache,
     dataURLOptions = {},
     inlineImages,
     recordCanvas,
@@ -585,6 +602,7 @@ function serializeNode(
         inlineStylesheet,
         maskInputOptions,
         maskInputFn,
+        maskingCache,
         dataURLOptions,
         inlineImages,
         recordCanvas,
@@ -607,6 +625,7 @@ function serializeNode(
         maskTextFn,
         maskInputOptions,
         maskInputFn,
+        maskingCache,
         rootId,
       });
     case n.CDATA_SECTION_NODE:
@@ -643,6 +662,7 @@ function serializeTextNode(
     maskTextFn: MaskTextFn | undefined;
     maskInputOptions: MaskInputOptions;
     maskInputFn: MaskInputFn | undefined;
+    maskingCache: MaskingCache;
     rootId: number | undefined;
   },
 ): serializedNode {
@@ -652,6 +672,7 @@ function serializeTextNode(
     unmaskTextClass,
     maskTextSelector,
     unmaskTextSelector,
+    maskingCache,
     maskTextFn,
     maskInputOptions,
     maskInputFn,
@@ -699,6 +720,7 @@ function serializeTextNode(
       unmaskTextClass,
       unmaskTextSelector,
       maskAllText,
+      maskingCache,
     )
   ) {
     textContent = maskTextFn
@@ -728,6 +750,7 @@ function serializeElementNode(
     inlineStylesheet: boolean;
     maskInputOptions: MaskInputOptions;
     maskInputFn: MaskInputFn | undefined;
+    maskingCache: MaskingCache;
     dataURLOptions?: DataURLOptions;
     inlineImages: boolean;
     recordCanvas: boolean;
@@ -751,6 +774,7 @@ function serializeElementNode(
     inlineStylesheet,
     maskInputOptions = {},
     maskInputFn,
+    maskingCache,
     dataURLOptions = {},
     inlineImages,
     recordCanvas,
@@ -826,6 +850,7 @@ function serializeElementNode(
         unmaskTextClass,
         unmaskTextSelector,
         maskAllText,
+        maskingCache,
       );
 
       attributes.value = maskInputValue({
@@ -1066,6 +1091,22 @@ function slimDOMExcluded(
   return false;
 }
 
+export class MaskingCache {
+  private nodeCache: WeakMap<Node, boolean> = new WeakMap();
+
+  get(node: Node): boolean {
+    return this.nodeCache.get(node) as boolean;
+  }
+
+  has(node: Node): boolean {
+    return this.nodeCache.has(node);
+  }
+
+  set(node: Node, masked: boolean) {
+    this.nodeCache.set(node, masked);
+  }
+}
+
 export function serializeNodeWithId(
   n: Node,
   options: {
@@ -1101,6 +1142,7 @@ export function serializeNodeWithId(
       node: serializedElementNodeWithId,
     ) => unknown;
     stylesheetLoadTimeout?: number;
+    maskingCache?: MaskingCache;
   },
 ): serializedNodeWithId | null {
   const {
@@ -1129,6 +1171,7 @@ export function serializeNodeWithId(
     stylesheetLoadTimeout = 5000,
     keepIframeSrcFn = () => false,
     newlyAddedElement = false,
+    maskingCache = new MaskingCache(),
   } = options;
   let { preserveWhiteSpace = true } = options;
   const _serializedNode = serializeNode(n, {
@@ -1150,6 +1193,7 @@ export function serializeNodeWithId(
     recordCanvas,
     keepIframeSrcFn,
     newlyAddedElement,
+    maskingCache,
   });
   if (!_serializedNode) {
     // TODO: dev only
@@ -1232,6 +1276,7 @@ export function serializeNodeWithId(
       onStylesheetLoad,
       stylesheetLoadTimeout,
       keepIframeSrcFn,
+      maskingCache,
     };
     for (const childN of Array.from(n.childNodes)) {
       const serializedChildNode = serializeNodeWithId(childN, bypassOptions);
@@ -1295,6 +1340,7 @@ export function serializeNodeWithId(
             onStylesheetLoad,
             stylesheetLoadTimeout,
             keepIframeSrcFn,
+            maskingCache,
           });
 
           if (serializedIframeNode) {
@@ -1345,6 +1391,7 @@ export function serializeNodeWithId(
             onStylesheetLoad,
             stylesheetLoadTimeout,
             keepIframeSrcFn,
+            maskingCache,
           });
 
           if (serializedLinkNode) {
