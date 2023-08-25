@@ -339,7 +339,7 @@ function distanceToMatch(
 
 function createMatchPredicate(
   className: string | RegExp | null,
-  selector: string | null
+  selector: string | null,
 ): (node: Node) => boolean {
   return (node: Node) => {
     const el = node as HTMLElement;
@@ -424,13 +424,7 @@ export function needMaskingText(
     const maskFn = createMatchPredicate(maskTextClass, maskTextSelector);
     const unmaskFn = createMatchPredicate(unmaskTextClass, unmaskTextSelector);
 
-    return _needMaskingText(
-      el,
-      maskFn,
-      unmaskFn,
-      maskAllText,
-      maskingCache,
-    );
+    return _needMaskingText(el, maskFn, unmaskFn, maskAllText, maskingCache);
   } catch (e) {
     //
   }
