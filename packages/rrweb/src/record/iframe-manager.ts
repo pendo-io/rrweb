@@ -52,11 +52,14 @@ export class IframeManager {
       this.crossOriginIframeMap.set(iframeEl.contentWindow, iframeEl);
 
     if (!iframeEl.contentDocument && iframeEl.contentWindow)
-      iframeEl.contentWindow.postMessage({
-        type: "rrweb",
-        origin: window.location.origin,
-        snapshot: true
-      }, "*");
+      iframeEl.contentWindow.postMessage(
+        {
+          type: 'rrweb',
+          origin: window.location.origin,
+          snapshot: true,
+        },
+        '*',
+      );
   }
 
   public addLoadListener(cb: (iframeEl: HTMLIFrameElement) => unknown) {
@@ -104,7 +107,11 @@ export class IframeManager {
     const iframeSourceWindow = message.source;
     if (!iframeSourceWindow) return;
 
-    if (iframeSourceWindow == window.parent && window != window.parent && message.data.snapshot) {
+    if (
+      iframeSourceWindow == window.parent &&
+      window != window.parent &&
+      message.data.snapshot
+    ) {
       this.takeFullSnapshot();
       return;
     }
