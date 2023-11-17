@@ -22,6 +22,7 @@ import {
   stringifyStylesheet,
   getInputType,
   toLowerCase,
+  nativeSetTimeout,
 } from './utils';
 
 let _id = 1;
@@ -360,7 +361,7 @@ function onceIframeLoaded(
     return;
   }
   if (readyState !== 'complete') {
-    const timer = setTimeout(() => {
+    const timer = nativeSetTimeout(() => {
       if (!fired) {
         listener();
         fired = true;
@@ -382,7 +383,7 @@ function onceIframeLoaded(
   ) {
     // iframe was already loaded, make sure we wait to trigger the listener
     // till _after_ the mutation that found this iframe has had time to process
-    setTimeout(listener, 0);
+    nativeSetTimeout(listener, 0);
 
     return iframeEl.addEventListener('load', listener); // keep listing for future loads
   }
@@ -410,7 +411,7 @@ function onceStylesheetLoaded(
 
   if (styleSheetLoaded) return;
 
-  const timer = setTimeout(() => {
+  const timer = nativeSetTimeout(() => {
     if (!fired) {
       listener();
       fired = true;
