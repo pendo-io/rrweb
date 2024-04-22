@@ -11,6 +11,7 @@ import {
   documentTypeNode,
   textNode,
   elementNode,
+  IWindow,
 } from './types';
 
 export function isElement(n: Node): n is Element {
@@ -29,6 +30,34 @@ export function isShadowRoot(n: Node): n is ShadowRoot {
 export function isNativeShadowDom(shadowRoot: ShadowRoot) {
   return Object.prototype.toString.call(shadowRoot) === '[object ShadowRoot]';
 }
+
+type WindowWithAngularZone = IWindow & {
+  Zone?: {
+    __symbol__?: (key: keyof IWindow) => string;
+  };
+  [key: string]: any;
+};
+
+export function getNative<T>(
+  symbolName: keyof IWindow,
+  windowObj: IWindow = window,
+): T {
+  const windowWithZone = windowObj as WindowWithAngularZone;
+  const angularZoneSymbol = windowWithZone?.Zone?.__symbol__?.(symbolName);
+  if (angularZoneSymbol) {
+    const zonelessImpl = windowWithZone[angularZoneSymbol] as T;
+    if (zonelessImpl) {
+      return zonelessImpl;
+    }
+  }
+
+  return windowWithZone[symbolName] as T;
+}
+
+export const nativeSetTimeout =
+  typeof window !== 'undefined'
+    ? getNative<typeof window.setTimeout>('setTimeout')
+    : global.setTimeout;
 
 /**
  * Browsers sometimes destructively modify the css rules they receive.
@@ -96,10 +125,12 @@ export function escapeImportStatement(rule: CSSImportRule): string {
 export function stringifyStylesheet(s: CSSStyleSheet): string | null {
   try {
     const rules = s.rules || s.cssRules;
+    const stringifiedRules = [] as string[];
+    for (let i = 0; i < rules.length; ++i) {
+      stringifiedRules.push(stringifyRule(rules[i]));
+    }
     return rules
-      ? fixBrowserCompatibilityIssuesInCSS(
-          Array.from(rules, stringifyRule).join(''),
-        )
+      ? fixBrowserCompatibilityIssuesInCSS(stringifiedRules.join(''))
       : null;
   } catch (error) {
     return null;
@@ -219,6 +250,7 @@ export function maskInputValue({
   type,
   value,
   maskInputFn,
+  needsMask,
 }: {
   element: HTMLElement;
   maskInputOptions: MaskInputOptions;
@@ -226,13 +258,15 @@ export function maskInputValue({
   type: string | null;
   value: string | null;
   maskInputFn?: MaskInputFn;
+  needsMask?: boolean;
 }): string {
   let text = value || '';
   const actualType = type && toLowerCase(type);
 
   if (
     maskInputOptions[tagName.toLowerCase() as keyof MaskInputOptions] ||
-    (actualType && maskInputOptions[actualType as keyof MaskInputOptions])
+    (actualType && maskInputOptions[actualType as keyof MaskInputOptions]) ||
+    needsMask
   ) {
     if (maskInputFn) {
       text = maskInputFn(text, element);
