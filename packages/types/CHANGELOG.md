@@ -1,5 +1,12 @@
 # @rrweb/types
 
+## 2.0.0-alpha.14
+
+### Patch Changes
+
+- Updated dependencies [[`5e7943d`](https://github.com/rrweb-io/rrweb/commit/5e7943dbae6e2cde76c484bdd26bc0b96f1b6dce), [`c0f83af`](https://github.com/rrweb-io/rrweb/commit/c0f83afab8f1565633de0e986b7e96fa56f2d25c), [`e96f668`](https://github.com/rrweb-io/rrweb/commit/e96f668c86bd0ab5dc190bb2957a170271bb2ebc)]:
+  - rrweb-snapshot@2.0.0-alpha.14
+
 ## 2.0.0-alpha.13
 
 ### Patch Changes
