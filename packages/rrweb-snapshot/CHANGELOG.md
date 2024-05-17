@@ -1,5 +1,20 @@
 # rrweb-snapshot
 
+## 2.0.0-alpha.14
+
+### Patch Changes
+
+- [#1387](https://github.com/rrweb-io/rrweb/pull/1387) [`5e7943d`](https://github.com/rrweb-io/rrweb/commit/5e7943dbae6e2cde76c484bdd26bc0b96f1b6dce) Thanks [@H4ad](https://github.com/H4ad)! - Avoid recreating the same element every time, instead, we cache and we just update the element.
+
+  Before: 779k ops/s
+  After: 860k ops/s
+
+  Benchmark: https://jsbench.me/ktlqztuf95/1
+
+- [#1440](https://github.com/rrweb-io/rrweb/pull/1440) [`c0f83af`](https://github.com/rrweb-io/rrweb/commit/c0f83afab8f1565633de0e986b7e96fa56f2d25c) Thanks [@daibhin](https://github.com/daibhin)! - better nested css selector splitting when commas or brackets happen to be in quoted text
+
+- [#1467](https://github.com/rrweb-io/rrweb/pull/1467) [`e96f668`](https://github.com/rrweb-io/rrweb/commit/e96f668c86bd0ab5dc190bb2957a170271bb2ebc) Thanks [@eoghanmurray](https://github.com/eoghanmurray)! - Bugfix after #1434 perf improvements: fix that blob urls persist on the shared anchor element and can't be later modified
+
 ## 2.0.0-alpha.13
 
 ### Minor Changes
