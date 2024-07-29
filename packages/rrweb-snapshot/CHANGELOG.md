@@ -1,5 +1,13 @@
 # rrweb-snapshot
 
+## 2.0.0-alpha.17
+
+### Patch Changes
+
+- [#1417](https://github.com/rrweb-io/rrweb/pull/1417) [`40bbc25`](https://github.com/rrweb-io/rrweb/commit/40bbc25fc287badc317a53f2d3f21b1c9f2b211b) Thanks [@YunFeng0817](https://github.com/YunFeng0817)! - fix: duplicate textContent for style elements cause incremental style mutations to be invalid
+
+- [#1533](https://github.com/rrweb-io/rrweb/pull/1533) [`d350da8`](https://github.com/rrweb-io/rrweb/commit/d350da8552d8616dd118ee550bdfbce082986562) Thanks [@jeffdnguyen](https://github.com/jeffdnguyen)! - Fix `url()` rewrite for nested stylesheets by rewriting during stringification instead of after
+
 ## 2.0.0-alpha.16
 
 ### Patch Changes
