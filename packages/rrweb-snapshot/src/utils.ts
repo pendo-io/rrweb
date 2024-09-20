@@ -64,7 +64,7 @@ export const nativeSetTimeout =
   typeof window !== 'undefined'
     ? (getNative<typeof window.setTimeout>('setTimeout').bind(
         window,
-      ) as typeof window.setTimeout)
+      ) )
     : global.setTimeout;
 
 /**
@@ -159,7 +159,7 @@ export function stringifyStylesheet(s: CSSStyleSheet): string | null {
   }
 }
 
-function replaceChromeGridTemplateAreas(rule: CSSStyleRule): string {
+export function replaceChromeGridTemplateAreas(rule: CSSStyleRule): string {
   const hasGridTemplateInCSSText = rule.cssText.includes('grid-template:');
   const hasGridTemplateAreaInStyleRules =
     rule.style.getPropertyValue('grid-template-areas') !== '';
@@ -176,23 +176,27 @@ function replaceChromeGridTemplateAreas(rule: CSSStyleRule): string {
     // e.g. https://bugs.chromium.org/p/chromium/issues/detail?id=1303968
     // we remove the grid-template rule from the text... so everything from grid-template: to the next semicolon
     // and then add each grid-template-x rule into the css text because Chrome isn't doing this correctly
-    const parts = rule.cssText
-      .split(';')
-      .filter((s) => !s.includes('grid-template:'))
-      .map((s) => s.trim());
+    const regex = /\{([^}]*)\}/;
+    const match = rule.cssText.match(regex);
+    const styleDeclarations =  match !== null ? match[1].split('; ') : [];
 
-    const gridStyles: string[] = [];
+    styleDeclarations.forEach((declaration, i) => {
+        if (!declaration.includes('grid-template:')) return;
 
-    for (let i = 0; i < rule.style.length; i++) {
-      const styleName = rule.style[i];
-      if (styleName.startsWith('grid-template')) {
-        gridStyles.push(
-          `${styleName}: ${rule.style.getPropertyValue(styleName)}`,
-        );
-      }
-    }
-    parts.splice(parts.length - 1, 0, gridStyles.join('; '));
-    return parts.join('; ');
+        const gridStyles = [];
+
+        for (let i = 0; i < rule.style.length; i++) {
+            const styleName = rule.style[i];
+
+            if (styleName.startsWith('grid-template')) {
+                gridStyles.push(`${styleName}: ${rule.style.getPropertyValue(styleName)}`);
+            }
+        }
+
+        styleDeclarations[i] = gridStyles.join('; ');
+    });
+
+    return `${rule.selectorText} {${styleDeclarations.join('; ')}}`;
   }
   return rule.cssText;
 }
