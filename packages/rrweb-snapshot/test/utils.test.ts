@@ -284,25 +284,28 @@ describe('utils', () => {
 
   describe('replaceChromeGridTemplateAreas', () => {
     it('does not alter corectly parsed grid template rules', () => {
-      const cssText = '#wrapper { display: grid; width: 100%; height: 100%; grid-template: repeat(2, 1fr); margin: 0px auto; }';
+      const cssText =
+        '#wrapper { display: grid; width: 100%; height: 100%; grid-template: repeat(2, 1fr); margin: 0px auto; }';
       const mockCssRule = {
         cssText,
         selectorText: '#wrapper',
         style: {
-          getPropertyValue (prop) {
+          getPropertyValue(prop) {
             return {
-              'grid-template-areas': ''
-            }[prop]
-          }
-        }
-      } as Partial<CSSStyleRule> as CSSStyleRule
+              'grid-template-areas': '',
+            }[prop];
+          },
+        },
+      } as Partial<CSSStyleRule> as CSSStyleRule;
 
       expect(replaceChromeGridTemplateAreas(mockCssRule)).toEqual(cssText);
     });
 
     it('fixes incorrectly parsed grid template rules', () => {
-      const cssText1 = '#wrapper { grid-template-areas: "header header" "main main" "footer footer"; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); display: grid; margin: 0px auto; }';
-      const cssText2 = '.some-class { color: purple; grid-template: "TopNav TopNav" 65px "SideNav Content" 52px "SideNav Content" / 255px auto; column-gap: 32px; }';
+      const cssText1 =
+        '#wrapper { grid-template-areas: "header header" "main main" "footer footer"; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); display: grid; margin: 0px auto; }';
+      const cssText2 =
+        '.some-class { color: purple; grid-template: "TopNav TopNav" 65px "SideNav Content" 52px "SideNav Content" / 255px auto; column-gap: 32px; }';
 
       const mockCssRule1 = {
         cssText: cssText1,
@@ -327,9 +330,9 @@ describe('utils', () => {
             }
             return '';
           },
-        } as Record<string | number, any>
-      } as Partial<CSSStyleRule> as CSSStyleRule
-      
+        } as Record<string | number, any>,
+      } as Partial<CSSStyleRule> as CSSStyleRule;
+
       const mockCssRule2 = {
         cssText: cssText2,
         selectorText: '.some-class',
@@ -353,14 +356,14 @@ describe('utils', () => {
             }
             return '';
           },
-        } as Record<string | number, any>
-      } as Partial<CSSStyleRule> as CSSStyleRule
+        } as Record<string | number, any>,
+      } as Partial<CSSStyleRule> as CSSStyleRule;
 
       expect(replaceChromeGridTemplateAreas(mockCssRule1)).toEqual(
-        '#wrapper { grid-template-areas: "header header" "main main" "footer footer"; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); display: grid; margin: 0px auto; }'
+        '#wrapper { grid-template-areas: "header header" "main main" "footer footer"; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); display: grid; margin: 0px auto; }',
       );
       expect(replaceChromeGridTemplateAreas(mockCssRule2)).toEqual(
-        '.some-class { color: purple; column-gap: 32px; grid-template-areas: "TopNav TopNav" "SideNav Content" "SideNav Content"; grid-template-rows: 65px 52px auto; grid-template-columns: 255px auto; }'
+        '.some-class { color: purple; column-gap: 32px; grid-template-areas: "TopNav TopNav" "SideNav Content" "SideNav Content"; grid-template-rows: 65px 52px auto; grid-template-columns: 255px auto; }',
       );
     });
   });
@@ -369,27 +372,27 @@ describe('utils', () => {
   //   const cssText =
   //     '#wrapper { display: grid; grid-template: "header header" max-content / repeat(2, 1fr); margin: 0px auto; }';
   //   // to avoid using JSDom we can fake as much of the CSSStyleDeclaration as we need
-    const cssStyleDeclaration: Record<string | number, any> = {
-      length: 3,
-      0: 'grid-template-areas',
-      1: 'grid-template-rows',
-      2: 'grid-template-columns',
-      items: (i: number): string => {
-        return [cssStyleDeclaration[i]].toString();
-      },
-      getPropertyValue: (key: string): string => {
-        if (key === 'grid-template-areas') {
-          return '"header header" "main main" "footer footer"';
-        }
-        if (key === 'grid-template-rows') {
-          return 'repeat(2, 1fr)';
-        }
-        if (key === 'grid-template-columns') {
-          return 'repeat(2, 1fr)';
-        }
-        return '';
-      },
-    };
+  const cssStyleDeclaration: Record<string | number, any> = {
+    length: 3,
+    0: 'grid-template-areas',
+    1: 'grid-template-rows',
+    2: 'grid-template-columns',
+    items: (i: number): string => {
+      return [cssStyleDeclaration[i]].toString();
+    },
+    getPropertyValue: (key: string): string => {
+      if (key === 'grid-template-areas') {
+        return '"header header" "main main" "footer footer"';
+      }
+      if (key === 'grid-template-rows') {
+        return 'repeat(2, 1fr)';
+      }
+      if (key === 'grid-template-columns') {
+        return 'repeat(2, 1fr)';
+      }
+      return '';
+    },
+  };
 
   //   const stringified = stringifyRule({
   //     cssText: cssText,

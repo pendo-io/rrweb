@@ -62,9 +62,7 @@ export function getNative<T>(
 
 export const nativeSetTimeout =
   typeof window !== 'undefined'
-    ? (getNative<typeof window.setTimeout>('setTimeout').bind(
-        window,
-      ) )
+    ? getNative<typeof window.setTimeout>('setTimeout').bind(window)
     : global.setTimeout;
 
 /**
@@ -178,22 +176,24 @@ export function replaceChromeGridTemplateAreas(rule: CSSStyleRule): string {
     // and then add each grid-template-x rule into the css text because Chrome isn't doing this correctly
     const regex = /\{([^}]*)\}/;
     const match = rule.cssText.match(regex);
-    const styleDeclarations =  match !== null ? match[1].split('; ') : [];
+    const styleDeclarations = match !== null ? match[1].split('; ') : [];
 
     styleDeclarations.forEach((declaration, i) => {
-        if (!declaration.includes('grid-template:')) return;
+      if (!declaration.includes('grid-template:')) return;
 
-        const gridStyles = [];
+      const gridStyles = [];
 
-        for (let i = 0; i < rule.style.length; i++) {
-            const styleName = rule.style[i];
+      for (let i = 0; i < rule.style.length; i++) {
+        const styleName = rule.style[i];
 
-            if (styleName.startsWith('grid-template')) {
-                gridStyles.push(`${styleName}: ${rule.style.getPropertyValue(styleName)}`);
-            }
+        if (styleName.startsWith('grid-template')) {
+          gridStyles.push(
+            `${styleName}: ${rule.style.getPropertyValue(styleName)}`,
+          );
         }
+      }
 
-        styleDeclarations[i] = gridStyles.join('; ');
+      styleDeclarations[i] = gridStyles.join('; ');
     });
 
     return `${rule.selectorText} {${styleDeclarations.join('; ')}}`;
