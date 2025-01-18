@@ -273,6 +273,7 @@ export function needMaskingText(
   let el: Element;
   if (isElement(node)) {
     el = node;
+    if (maskTextSelector === '*') return true;
     if (!dom.childNodes(el).length) {
       // optimisation: we can avoid any of the below checks on leaf elements
       // as masking is applied to child text nodes only
