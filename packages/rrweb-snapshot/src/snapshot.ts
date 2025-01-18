@@ -507,7 +507,8 @@ function serializeTextNode(
     rootId: number | undefined;
   },
 ): serializedNode {
-  const { needsMask, maskTextFn, rootId, maskInputOptions, maskInputFn } = options;
+  const { needsMask, maskTextFn, rootId, maskInputOptions, maskInputFn } =
+    options;
   // The parent node may not be a html element which has a tagName attribute.
   // So just let it be undefined which is ok in this use case.
   const parent = dom.parentNode(n);
