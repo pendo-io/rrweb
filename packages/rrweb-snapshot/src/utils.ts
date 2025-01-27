@@ -14,7 +14,7 @@ import type {
   documentTypeNode,
   textNode,
   elementNode,
-  IWindow
+  IWindow,
 } from '@rrweb/types';
 import dom from '@rrweb/utils';
 
