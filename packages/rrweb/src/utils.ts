@@ -8,15 +8,10 @@ import type {
   IWindow,
   DeprecatedMirror,
   textMutation,
+  IMirror,
 } from '@rrweb/types';
-import type { IMirror, Mirror, SlimDOMOptions } from 'rrweb-snapshot';
-import {
-  isShadowRoot,
-  IGNORED_NODE,
-  classMatchesRegex,
-  getNative,
-  nativeSetTimeout,
-} from 'rrweb-snapshot';
+import type { Mirror, SlimDOMOptions } from 'rrweb-snapshot';
+import { isShadowRoot, IGNORED_NODE, classMatchesRegex, getNative, nativeSetTimeout } from 'rrweb-snapshot';
 import { RRNode, RRIFrameElement, BaseRRNode } from 'rrdom';
 import dom from '@rrweb/utils';
 
