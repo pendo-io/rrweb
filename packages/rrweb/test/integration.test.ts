@@ -14,8 +14,8 @@ import {
   ISuite,
 } from './utils';
 import type { recordOptions } from '../src/types';
-import { eventWithTime, EventType, RecordPlugin } from '@rrweb/types';
-import { visitSnapshot, NodeType } from 'rrweb-snapshot';
+import { eventWithTime, NodeType, EventType } from '@rrweb/types';
+import { visitSnapshot } from 'rrweb-snapshot';
 
 describe('record integration tests', function (this: ISuite) {
   vi.setConfig({ testTimeout: 10_000 });
@@ -806,9 +806,46 @@ describe('record integration tests', function (this: ISuite) {
 
       const nextElement = document.querySelector('#one')!;
       nextElement.parentNode!.insertBefore(el, nextElement);
+
+      const ta = document.createElement('textarea');
+      ta.size = 50;
+      ta.id = 'textarea';
+      ta.setAttribute('size', '50');
+      ta.value = 'textarea should be masked';
+
+      nextElement.parentNode!.insertBefore(ta, nextElement);
     });
 
     await page.type('#input', 'moo');
+    await page.type('#textarea', 'boo');
+
+    await page.evaluate(() => {
+      const el = document.querySelector('input');
+      el.value = 'input attribute mutation should also be masked';
+
+      const ta = document.querySelector('textarea');
+      ta.value = 'textarea attribute mutation should also be masked';
+    });
+
+    await page.evaluate(() => {
+      const el = document.querySelector('input');
+      el.setAttribute(
+        'value',
+        "input attribute mutation should also be masked (even though the new value doesn't take effect)",
+      );
+
+      const ta = document.querySelector('textarea');
+      ta.setAttribute(
+        'value',
+        "textarea attribute mutation should also be masked (even though the new value doesn't take effect)",
+      );
+    });
+
+    await page.evaluate(() => {
+      const ta = document.querySelector('textarea');
+      ta.innerText =
+        'textarea attribute mutation via innerText should also be masked ';
+    });
 
     await assertSnapshot(page);
   });
