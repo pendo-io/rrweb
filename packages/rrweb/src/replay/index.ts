@@ -70,7 +70,7 @@ import type {
   styleDeclarationData,
   adoptedStyleSheetData,
   styleParam,
-  serializedElementNodeWithId
+  serializedElementNodeWithId,
 } from '@rrweb/types';
 import {
   polyfill,
