@@ -10,19 +10,8 @@ import type {
   textMutation,
   IMirror,
 } from '@rrweb/types';
-<<<<<<< HEAD
-import type { IMirror, Mirror, SlimDOMOptions } from 'rrweb-snapshot';
-import {
-  isShadowRoot,
-  IGNORED_NODE,
-  classMatchesRegex,
-  getNative,
-  nativeSetTimeout,
-} from 'rrweb-snapshot';
-=======
 import type { Mirror, SlimDOMOptions } from 'rrweb-snapshot';
-import { isShadowRoot, IGNORED_NODE, classMatchesRegex } from 'rrweb-snapshot';
->>>>>>> master
+import { isShadowRoot, IGNORED_NODE, classMatchesRegex, getNative, nativeSetTimeout } from 'rrweb-snapshot';
 import { RRNode, RRIFrameElement, BaseRRNode } from 'rrdom';
 import dom from '@rrweb/utils';
 
