@@ -2,7 +2,6 @@
  * @vitest-environment jsdom
  */
 import { describe, it, test, expect } from 'vitest';
-import { NodeType, serializedNode } from '../src/types';
 import {
   escapeImportStatement,
   extractFileExtension,
@@ -10,7 +9,8 @@ import {
   fixSafariColons,
   isNodeMetaEqual,
 } from '../src/utils';
-import type { serializedNodeWithId } from 'rrweb-snapshot';
+import { NodeType } from '@rrweb/types';
+import type { serializedNode, serializedNodeWithId } from '@rrweb/types';
 
 describe('utils', () => {
   describe('isNodeMetaEqual()', () => {

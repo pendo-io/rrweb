@@ -1,20 +1,22 @@
-import {
-  type serializedNode,
-  type serializedNodeWithId,
-  NodeType,
-  type attributes,
-  type MaskInputOptions,
-  type SlimDOMOptions,
-  type DataURLOptions,
-  type DialogAttributes,
-  type MaskTextFn,
-  type MaskInputFn,
-  type KeepIframeSrcFn,
-  type ICanvas,
-  type elementNode,
-  type serializedElementNodeWithId,
-  type mediaAttributes,
+import type {
+  MaskInputOptions,
+  SlimDOMOptions,
+  MaskTextFn,
+  MaskInputFn,
+  KeepIframeSrcFn,
+  ICanvas,
+  DialogAttributes,
 } from './types';
+import { NodeType } from '@rrweb/types';
+import type {
+  serializedNode,
+  serializedNodeWithId,
+  serializedElementNodeWithId,
+  elementNode,
+  attributes,
+  mediaAttributes,
+  DataURLOptions,
+} from '@rrweb/types';
 import {
   Mirror,
   is2DCanvasBlank,
@@ -860,9 +862,8 @@ function slimDOMExcluded(
       (sn.tagName === 'script' ||
         // (module)preload link
         (sn.tagName === 'link' &&
-          (sn.attributes.rel === 'preload' ||
-            sn.attributes.rel === 'modulepreload') &&
-          sn.attributes.as === 'script') ||
+          ((sn.attributes.rel === 'preload' && sn.attributes.as === 'script') ||
+            sn.attributes.rel === 'modulepreload')) ||
         // prefetch link
         (sn.tagName === 'link' &&
           sn.attributes.rel === 'prefetch' &&
