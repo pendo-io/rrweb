@@ -6,18 +6,17 @@ import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import { vi } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { buildNodeWithSN, Mirror } from 'rrweb-snapshot';
 import {
-  buildNodeWithSN,
   cdataNode,
   commentNode,
   documentNode,
   documentTypeNode,
   elementNode,
-  Mirror,
   NodeType,
   NodeType as RRNodeType,
   textNode,
-} from 'rrweb-snapshot';
+} from '@rrweb/types';
 import {
   buildFromDom,
   buildFromNode,
@@ -243,7 +242,9 @@ describe('RRDocument for browser environment', () => {
     let page: puppeteer.Page;
 
     beforeAll(async () => {
-      browser = await puppeteer.launch();
+      browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
       code = fs.readFileSync(
         path.resolve(__dirname, '../dist/rrdom.umd.cjs'),
         'utf8',
