@@ -527,7 +527,23 @@ function diffChildren(
   let oldChild = oldTree.firstChild;
   let newChild = newTree.firstChild;
   while (oldChild !== null && newChild !== null) {
+    const isMismatch = !nodeMatching(oldChild, newChild, replayer.mirror, rrnodeMirror);
+
+    // If oldChild and newChild don't match due to changes or misalignment, a new DOM node is created for newChild and inserted before oldChild.
+    if (isMismatch) {
+      const newNode = createOrGetNode(newChild, replayer.mirror, rrnodeMirror);
+    
+      // Insert the new node before the current oldChild to preserve correct order.
+      oldTree.insertBefore(newNode, oldChild);
+    
+      diff(newNode, newChild, replayer, rrnodeMirror);
+    
+      newChild = newChild.nextSibling;
+      continue;
+    }
+
     diff(oldChild, newChild, replayer, rrnodeMirror);
+
     oldChild = oldChild.nextSibling;
     newChild = newChild.nextSibling;
   }
