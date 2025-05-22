@@ -527,7 +527,15 @@ function diffChildren(
   let oldChild = oldTree.firstChild;
   let newChild = newTree.firstChild;
   while (oldChild !== null && newChild !== null) {
+    const { previousSibling } = oldChild;
     diff(oldChild, newChild, replayer, rrnodeMirror);
+
+    // If oldChild is detached from oldTree, use its previous sibling to grab the next sibling to continue diffing.
+    if (oldChild.parentNode !== oldTree && previousSibling) {
+      oldChild = previousSibling.nextSibling;
+      continue;
+    }
+
     oldChild = oldChild.nextSibling;
     newChild = newChild.nextSibling;
   }
