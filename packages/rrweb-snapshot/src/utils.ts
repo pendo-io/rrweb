@@ -149,7 +149,7 @@ export function stringifyStylesheet(s: CSSStyleSheet): string | null {
     let sheetHref = s.href;
     if (!sheetHref && s.ownerNode && s.ownerNode.ownerDocument) {
       // an inline <style> element
-      sheetHref = s.ownerNode.ownerDocument.location.href;
+      sheetHref = s.ownerNode.ownerDocument.baseURI;
     }
     const stringifiedRules = Array.from(rules, (rule: CSSRule) =>
       stringifyRule(rule, sheetHref),
