@@ -2,6 +2,7 @@
 import dts from 'vite-plugin-dts';
 import { copyFileSync } from 'node:fs';
 import { defineConfig, LibraryOptions, LibraryFormats, Plugin } from 'vite';
+import { RollupOptions } from 'rollup';
 import { build, Format } from 'esbuild';
 import { resolve } from 'path';
 import { umdWrapper } from 'esbuild-plugin-umd-wrapper';
@@ -15,6 +16,7 @@ const emptyOutDir = !process.argv.includes('--watch');
  * For chrome extension, we need to disable worker inlining to pass the review.
  */
 const disableWorkerInlining = process.env.DISABLE_WORKER_INLINING === 'true';
+const makePostcssExternal = process.env.MAKE_POSTCSS_EXTERNAL === 'true';
 
 function minifyAndUMDPlugin({
   name,
@@ -114,6 +116,12 @@ export default function (
   options?: { outputDir?: string; fileName?: string; plugins?: Plugin[] },
 ) {
   const { fileName, outputDir: outDir = 'dist', plugins = [] } = options || {};
+  let rollupOptions: RollupOptions = {};
+  if (makePostcssExternal) {
+    rollupOptions = {
+      external: ['postcss']
+    }
+  }
 
   let formats: LibraryFormats[] = ['es', 'cjs'];
 
@@ -139,6 +147,7 @@ export default function (
       minify: false,
 
       sourcemap: true,
+      rollupOptions,
 
       // rollupOptions: {
       //   output: {
