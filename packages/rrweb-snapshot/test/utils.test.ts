@@ -8,7 +8,7 @@ import {
   replaceChromeGridTemplateAreas,
   fixSafariColons,
   isNodeMetaEqual,
-  stringifyStylesheet
+  stringifyStylesheet,
 } from '../src/utils';
 import { NodeType } from '@rrweb/types';
 import type { serializedNode, serializedNodeWithId } from '@rrweb/types';
@@ -394,7 +394,7 @@ describe('utils', () => {
       expect(stringifyStylesheet(mockSheet)).toBe('div { margin: 0; }');
     });
 
-    it('uses ownerNode.ownerDocument.baseURI for inline styles', () => {
+    it('uses ownerNode.baseURI for inline styles', () => {
       const mockFontFaceRule = {
         cssText: `
           @font-face {
@@ -403,14 +403,10 @@ describe('utils', () => {
             font-weight: normal;
             font-style: normal;
           }
-        `
+        `,
       } as CSSRule;
-      const mockOwnerDocument = {
-        location: { href: 'https://example.com/page.html' },
-        baseURI: 'https://example.com/fonts/',
-      } as unknown as Document;
       const mockOwnerNode = {
-        ownerDocument: mockOwnerDocument,
+        baseURI: 'https://example.com/fonts/',
       } as unknown as Node;
       const mockSheet = {
         cssRules: [mockFontFaceRule],
@@ -418,9 +414,9 @@ describe('utils', () => {
         ownerNode: mockOwnerNode,
       } as unknown as CSSStyleSheet;
       expect(
-        stringifyStylesheet(mockSheet)?.replace(/\s+/g, ' ').trim()
+        stringifyStylesheet(mockSheet)?.replace(/\s+/g, ' ').trim(),
       ).toEqual(
-          "@font-face { font-family: 'MockFont'; src: url('https://example.com/fonts/mockfont.woff2') format('woff2'); font-weight: normal; font-style: normal; }"
+        "@font-face { font-family: 'MockFont'; src: url('https://example.com/fonts/mockfont.woff2') format('woff2'); font-weight: normal; font-style: normal; }",
       );
     });
   });
