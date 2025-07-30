@@ -119,8 +119,8 @@ export default function (
   let rollupOptions: RollupOptions = {};
   if (makePostcssExternal) {
     rollupOptions = {
-      external: ['postcss']
-    }
+      external: ['postcss'],
+    };
   }
 
   let formats: LibraryFormats[] = ['es', 'cjs'];

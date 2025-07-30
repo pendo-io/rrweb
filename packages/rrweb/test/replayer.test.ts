@@ -318,7 +318,9 @@ describe('replayer', function () {
   });
 
   it('should persist inserted stylesheet rules on fast forward', async () => {
-    await page.evaluate(`events = ${JSON.stringify(insertedStyleSheetRuleEvents)}`);
+    await page.evaluate(
+      `events = ${JSON.stringify(insertedStyleSheetRuleEvents)}`,
+    );
     const result = await page.evaluate(`
       const { Replayer } = rrweb;
       const replayer = new Replayer(events);

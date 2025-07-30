@@ -8,7 +8,7 @@ import {
   replaceChromeGridTemplateAreas,
   fixSafariColons,
   isNodeMetaEqual,
-  stringifyStylesheet
+  stringifyStylesheet,
 } from '../src/utils';
 import { NodeType } from '@rrweb/types';
 import type { serializedNode, serializedNodeWithId } from '@rrweb/types';
@@ -403,7 +403,7 @@ describe('utils', () => {
             font-weight: normal;
             font-style: normal;
           }
-        `
+        `,
       } as CSSRule;
       const mockOwnerDocument = {
         location: { href: 'https://example.com/page.html' },
@@ -418,9 +418,9 @@ describe('utils', () => {
         ownerNode: mockOwnerNode,
       } as unknown as CSSStyleSheet;
       expect(
-        stringifyStylesheet(mockSheet)?.replace(/\s+/g, ' ').trim()
+        stringifyStylesheet(mockSheet)?.replace(/\s+/g, ' ').trim(),
       ).toEqual(
-          "@font-face { font-family: 'MockFont'; src: url('https://example.com/fonts/mockfont.woff2') format('woff2'); font-weight: normal; font-style: normal; }"
+        "@font-face { font-family: 'MockFont'; src: url('https://example.com/fonts/mockfont.woff2') format('woff2'); font-weight: normal; font-style: normal; }",
       );
     });
   });
