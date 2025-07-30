@@ -42,8 +42,7 @@
         "default": "./dist/replay.cjs"
       }
     },
-    "./dist/style.css": "./dist/style.css",
-    "./dist/style.min.css": "./dist/style.min.css"
+    "./dist/style.css": "./dist/style.css"
   },
   "files": [
     "dist",

@@ -46,7 +46,8 @@
         "default": "./dist/rrweb.cjs"
       }
     },
-    "./dist/style.css": "./dist/style.css"
+    "./dist/style.css": "./dist/style.css",
+    "./dist/style.min.css": "./dist/style.min.css"
   },
   "files": [
     "dist",
