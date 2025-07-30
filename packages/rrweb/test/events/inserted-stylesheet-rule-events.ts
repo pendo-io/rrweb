@@ -85,16 +85,16 @@ const events: eventWithTime[] = [
                     type: 2,
                     tagName: 'style',
                     attributes: {
-                        'type': 'text/css',
-                        'gs-style-id': 'gs-id-0',
-                        '_cssText': '.original-style-rule { color: red; }'
+                      type: 'text/css',
+                      'gs-style-id': 'gs-id-0',
+                      _cssText: '.original-style-rule { color: red; }',
                     },
                     childNodes: [
                       {
                         id: 109,
                         type: 3,
                         textContent: '',
-                        isStyle: true
+                        isStyle: true,
                       },
                     ],
                   },
@@ -143,11 +143,11 @@ const events: eventWithTime[] = [
             childNodes: [],
             id: 110,
           },
-        }
+        },
       ],
     },
     timestamp: now + 900,
-  }
+  },
 ];
 
 export default events;
