@@ -586,6 +586,30 @@ describe('record integration tests', function (this: ISuite) {
     assertSnapshot(snapshots);
   });
 
+  it('should mask textarea childs nodes when using maskTextSelector', async () => {
+    const page: puppeteer.Page = await browser.newPage();
+    await page.goto('about:blank');
+    await page.setContent(
+      getHtml.call(this, 'form.html', {
+        maskTextSelector: 'textarea',
+        maskInputFn: () => '*'.repeat(10),
+      }),
+    );
+
+    await page.evaluate(() => {
+      const textarea = document.querySelector(
+        'textarea',
+      ) as HTMLTextAreaElement;
+      const textNode = document.createTextNode('test-sensitive-data');
+      textarea.appendChild(textNode);
+    });
+
+    const snapshots = (await page.evaluate(
+      'window.snapshots',
+    )) as eventWithTime[];
+    await assertSnapshot(snapshots);
+  });
+
   it('should mask password value attribute with maskInputOptions', async () => {
     const page: puppeteer.Page = await browser.newPage();
     await page.goto('about:blank');
