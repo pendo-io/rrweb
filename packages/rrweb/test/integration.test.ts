@@ -590,11 +590,16 @@ describe('record integration tests', function (this: ISuite) {
     const page: puppeteer.Page = await browser.newPage();
     await page.goto('about:blank');
     await page.setContent(
-      getHtml.call(this, 'form.html', { maskTextSelector: 'textarea', maskInputFn: () => '*'.repeat(10) }),
+      getHtml.call(this, 'form.html', {
+        maskTextSelector: 'textarea',
+        maskInputFn: () => '*'.repeat(10),
+      }),
     );
 
     await page.evaluate(() => {
-      const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+      const textarea = document.querySelector(
+        'textarea',
+      ) as HTMLTextAreaElement;
       const textNode = document.createTextNode('test-sensitive-data');
       textarea.appendChild(textNode);
     });
