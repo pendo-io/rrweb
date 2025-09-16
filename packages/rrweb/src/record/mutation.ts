@@ -574,6 +574,12 @@ export default class MutationBuffer {
       dom.childNodes(textarea),
       (cn) => dom.textContent(cn) || '',
     ).join('');
+    const needsMask = needMaskingText(
+      textarea,
+      this.maskTextClass,
+      this.maskTextSelector,
+      true,
+    );
     item.attributes.value = maskInputValue({
       element: textarea,
       maskInputOptions: this.maskInputOptions,
@@ -581,6 +587,7 @@ export default class MutationBuffer {
       type: getInputType(textarea),
       value,
       maskInputFn: this.maskInputFn,
+      needsMask,
     });
   };
 
