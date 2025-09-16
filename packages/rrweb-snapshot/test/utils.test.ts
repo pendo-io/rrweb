@@ -394,7 +394,7 @@ describe('utils', () => {
       expect(stringifyStylesheet(mockSheet)).toBe('div { margin: 0; }');
     });
 
-    it('uses ownerNode.ownerDocument.baseURI for inline styles', () => {
+    it('uses ownerNode.baseURI for inline styles', () => {
       const mockFontFaceRule = {
         cssText: `
           @font-face {
@@ -405,12 +405,8 @@ describe('utils', () => {
           }
         `,
       } as CSSRule;
-      const mockOwnerDocument = {
-        location: { href: 'https://example.com/page.html' },
-        baseURI: 'https://example.com/fonts/',
-      } as unknown as Document;
       const mockOwnerNode = {
-        ownerDocument: mockOwnerDocument,
+        baseURI: 'https://example.com/fonts/',
       } as unknown as Node;
       const mockSheet = {
         cssRules: [mockFontFaceRule],
