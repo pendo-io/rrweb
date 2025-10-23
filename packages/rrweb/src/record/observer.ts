@@ -1319,7 +1319,7 @@ function mergeHooks(o: observerParam, hooks: hooksParam) {
 
 export function initObservers(
   o: observerParam,
-  hooks: hooksParam = {}
+  hooks: hooksParam = {},
 ): listenerHandler {
   const currentWindow = o.doc.defaultView; // basically document.window
   if (!currentWindow) {
