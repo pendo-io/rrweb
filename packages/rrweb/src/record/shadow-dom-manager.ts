@@ -61,7 +61,7 @@ export class ShadowDomManager {
         mirror: this.mirror,
         shadowDomManager: this,
       },
-      shadowRoot,
+      shadowRoot
     );
     this.restoreHandlers.push(() => observer.disconnect());
     this.restoreHandlers.push(
@@ -108,7 +108,7 @@ export class ShadowDomManager {
           Element: { prototype: Element };
         }
       ).Element,
-      iframeElement.contentDocument,
+      iframeElement.contentDocument
     );
   }
 
@@ -119,7 +119,7 @@ export class ShadowDomManager {
     element: {
       prototype: Element;
     },
-    doc: Document,
+    doc: Document
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const manager = this;

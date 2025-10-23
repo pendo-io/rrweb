@@ -378,6 +378,16 @@ function initViewportResizeObserver(
   return on('resize', updateDimension, win);
 }
 
+export function findAndRemoveIframeBuffer(iframeEl: HTMLIFrameElement) {
+  for (let i = mutationBuffers.length - 1; i >= 0; i--) {
+    const buf = mutationBuffers[i];
+    if (buf.bufferBelongsToIframe(iframeEl)) {
+      buf.reset();
+      mutationBuffers.splice(i, 1);
+    }
+  }
+}
+
 export const INPUT_TAGS = ['INPUT', 'TEXTAREA', 'SELECT'];
 const lastInputValueMap: WeakMap<EventTarget, inputValue> = new WeakMap();
 function initInputObserver({
@@ -1309,7 +1319,7 @@ function mergeHooks(o: observerParam, hooks: hooksParam) {
 
 export function initObservers(
   o: observerParam,
-  hooks: hooksParam = {},
+  hooks: hooksParam = {}
 ): listenerHandler {
   const currentWindow = o.doc.defaultView; // basically document.window
   if (!currentWindow) {
