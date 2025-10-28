@@ -1742,9 +1742,10 @@ export class Replayer {
         );
         break;
       }
+
+      const ids = nodeIdsToBeAdded(resolveTrees);
       for (const tree of resolveTrees) {
         const parent = mirror.getNode(tree.value.parentId);
-        const ids = nodeIdsToBeAdded(resolveTrees);
         if (!parent && !ids.has(tree.value.parentId)) {
           this.debug(
             'Drop resolve tree since there is no parent for the root node.',
