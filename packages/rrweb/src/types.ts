@@ -47,6 +47,7 @@ export type recordOptions<T> = {
   checkoutEveryNms?: number;
   blockClass?: blockClass;
   blockSelector?: string;
+  hideSelector?: string;
   ignoreClass?: string;
   ignoreSelector?: string;
   maskTextClass?: maskTextClass;
@@ -87,6 +88,7 @@ export type observerParam = {
   selectionCb: selectionCallback;
   blockClass: blockClass;
   blockSelector: string | null;
+  hideSelector: string | null;
   ignoreClass: string;
   ignoreSelector: string | null;
   maskTextClass: maskTextClass;
@@ -133,6 +135,7 @@ export type MutationBufferParam = Pick<
   | 'mutationCb'
   | 'blockClass'
   | 'blockSelector'
+  | 'hideSelector'
   | 'maskTextClass'
   | 'maskTextSelector'
   | 'inlineStylesheet'

@@ -8,7 +8,7 @@ import snapshot, {
   _isBlockedElement,
   serializeNodeWithId,
 } from '../src/snapshot';
-import { elementNode, serializedNodeWithId } from '../src/types';
+import { elementNode, serializedNodeWithId } from '@rrweb/types';
 import { Mirror, absolutifyURLs } from '../src/utils';
 
 const serializeNode = (node: Node): serializedNodeWithId | null => {
@@ -17,6 +17,7 @@ const serializeNode = (node: Node): serializedNodeWithId | null => {
     mirror: new Mirror(),
     blockClass: 'blockblock',
     blockSelector: null,
+    hideSelector: null,
     maskTextClass: 'maskmask',
     maskTextSelector: null,
     skipChild: false,
@@ -150,6 +151,89 @@ describe('isBlockedElement()', () => {
     expect(
       subject('<div data-rr-block />', { blockSelector: '[data-rr-block]' }),
     ).toEqual(true);
+  });
+});
+
+describe('hideSelector', () => {
+  const render = (html: string): HTMLElement =>
+    JSDOM.fragment(html).querySelector('div')!;
+
+  const serialize = (
+    node: Node,
+    blockSelector: string | null,
+    hideSelector: string | null,
+  ): serializedNodeWithId | null => {
+    return serializeNodeWithId(node, {
+      doc: document,
+      mirror: new Mirror(),
+      blockClass: 'blockblock',
+      blockSelector,
+      hideSelector,
+      maskTextClass: 'maskmask',
+      maskTextSelector: null,
+      skipChild: false,
+      inlineStylesheet: true,
+      maskTextFn: undefined,
+      maskInputFn: undefined,
+      slimDOMOptions: {},
+    });
+  };
+
+  it('sets rr_display and preserves existing classes when element matches both blockSelector and hideSelector', () => {
+    const el = render('<div class="foo bar sensitive" data-value="secret"></div>');
+    const result = serialize(el, '.sensitive', '.sensitive');
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.class).toBe('foo bar sensitive');
+    expect((result as any).attributes.rr_display).toBe('none');
+    // should only have rr_display, not rr_width/rr_height
+    expect((result as any).attributes.rr_width).toBeUndefined();
+    expect((result as any).attributes.rr_height).toBeUndefined();
+  });
+
+  it('does not hide element if it only matches hideSelector but not blockSelector', () => {
+    const el = render('<div class="sensitive"></div>');
+    const result = serialize(el, '.other', '.sensitive');
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.rr_display).toBeUndefined();
+  });
+
+  it('blocks with rr_width/rr_height if element matches blockSelector but not hideSelector', () => {
+    const el = render('<div class="blocked"></div>');
+    const result = serialize(el, '.blocked', '.hidden');
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.rr_width).toBeDefined();
+    expect((result as any).attributes.rr_height).toBeDefined();
+    expect((result as any).attributes.rr_display).toBeUndefined();
+  });
+
+  it('handles complex selectors', () => {
+    const el = render('<div data-sensitive="true" class="user-data"></div>');
+    const result = serialize(el, '[data-sensitive], .user-data', '[data-sensitive]');
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.rr_display).toBe('none');
+    expect((result as any).attributes.class).toBe('user-data');
+  });
+
+  it('does nothing when hideSelector is null', () => {
+    const el = render('<div class="sensitive"></div>');
+    const result = serialize(el, '.sensitive', null);
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.rr_width).toBeDefined();
+    expect((result as any).attributes.rr_display).toBeUndefined();
+  });
+
+  it('sets rr_display even when element has no existing class', () => {
+    const el = render('<div id="test"></div>');
+    const result = serialize(el, '#test', '#test');
+
+    expect(result).toBeTruthy();
+    expect((result as any).attributes.rr_display).toBe('none');
+    expect((result as any).attributes.class).toBeUndefined();
   });
 });
 
