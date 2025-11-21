@@ -180,7 +180,9 @@ describe('hideSelector', () => {
   };
 
   it('sets rr_display and preserves existing classes when element matches both blockSelector and hideSelector', () => {
-    const el = render('<div class="foo bar sensitive" data-value="secret"></div>');
+    const el = render(
+      '<div class="foo bar sensitive" data-value="secret"></div>',
+    );
     const result = serialize(el, '.sensitive', '.sensitive');
 
     expect(result).toBeTruthy();
@@ -211,7 +213,11 @@ describe('hideSelector', () => {
 
   it('handles complex selectors', () => {
     const el = render('<div data-sensitive="true" class="user-data"></div>');
-    const result = serialize(el, '[data-sensitive], .user-data', '[data-sensitive]');
+    const result = serialize(
+      el,
+      '[data-sensitive], .user-data',
+      '[data-sensitive]',
+    );
 
     expect(result).toBeTruthy();
     expect((result as any).attributes.rr_display).toBe('none');

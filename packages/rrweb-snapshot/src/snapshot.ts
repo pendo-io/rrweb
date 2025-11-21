@@ -621,7 +621,8 @@ function serializeElementNode(
     needsMask,
   } = options;
   const needBlock = _isBlockedElement(n, blockClass, blockSelector);
-  const needHide = needBlock && hideSelector ? _isBlockedElement(n, '', hideSelector) : false;
+  const needHide =
+    needBlock && hideSelector ? _isBlockedElement(n, '', hideSelector) : false;
   const tagName = getValidTagName(n);
   let attributes: attributes = {};
   const len = n.attributes.length;
