@@ -368,6 +368,8 @@ function buildNode(
           (node as HTMLElement).style.setProperty('width', value.toString());
         } else if (name === 'rr_height') {
           (node as HTMLElement).style.setProperty('height', value.toString());
+        } else if (name === 'rr_display') {
+          (node as HTMLElement).style.setProperty('display', value.toString());
         } else if (
           name === 'rr_mediaCurrentTime' &&
           typeof value === 'number'

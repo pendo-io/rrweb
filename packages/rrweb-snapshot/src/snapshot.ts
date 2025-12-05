@@ -397,6 +397,7 @@ function serializeNode(
     mirror: Mirror;
     blockClass: string | RegExp;
     blockSelector: string | null;
+    hideSelector: string | null;
     needsMask: boolean;
     inlineStylesheet: boolean;
     maskInputOptions: MaskInputOptions;
@@ -418,6 +419,7 @@ function serializeNode(
     mirror,
     blockClass,
     blockSelector,
+    hideSelector,
     needsMask,
     inlineStylesheet,
     maskInputOptions = {},
@@ -459,6 +461,7 @@ function serializeNode(
         doc,
         blockClass,
         blockSelector,
+        hideSelector,
         inlineStylesheet,
         maskInputOptions,
         maskInputFn,
@@ -585,6 +588,7 @@ function serializeElementNode(
     doc: Document;
     blockClass: string | RegExp;
     blockSelector: string | null;
+    hideSelector: string | null;
     inlineStylesheet: boolean;
     maskInputOptions: MaskInputOptions;
     maskInputFn: MaskInputFn | undefined;
@@ -604,6 +608,7 @@ function serializeElementNode(
     doc,
     blockClass,
     blockSelector,
+    hideSelector,
     inlineStylesheet,
     maskInputOptions = {},
     maskInputFn,
@@ -616,6 +621,8 @@ function serializeElementNode(
     needsMask,
   } = options;
   const needBlock = _isBlockedElement(n, blockClass, blockSelector);
+  const needHide =
+    needBlock && hideSelector ? _isBlockedElement(n, '', hideSelector) : false;
   const tagName = getValidTagName(n);
   let attributes: attributes = {};
   const len = n.attributes.length;
@@ -800,8 +807,13 @@ function serializeElementNode(
       attributes.rr_scrollTop = n.scrollTop;
     }
   }
-  // block element
-  if (needBlock) {
+  // hide or block element
+  if (needHide) {
+    attributes = {
+      class: attributes.class,
+      rr_display: 'none',
+    };
+  } else if (needBlock) {
     const { width, height } = n.getBoundingClientRect();
     attributes = {
       class: attributes.class,
@@ -946,6 +958,7 @@ export function serializeNodeWithId(
     mirror: Mirror;
     blockClass: string | RegExp;
     blockSelector: string | null;
+    hideSelector: string | null;
     maskTextClass: string | RegExp;
     maskTextSelector: string | null;
     skipChild: boolean;
@@ -980,6 +993,7 @@ export function serializeNodeWithId(
     mirror,
     blockClass,
     blockSelector,
+    hideSelector,
     maskTextClass,
     maskTextSelector,
     skipChild = false,
@@ -1019,6 +1033,7 @@ export function serializeNodeWithId(
     mirror,
     blockClass,
     blockSelector,
+    hideSelector,
     needsMask,
     inlineStylesheet,
     maskInputOptions,
@@ -1090,6 +1105,7 @@ export function serializeNodeWithId(
       mirror,
       blockClass,
       blockSelector,
+      hideSelector,
       needsMask,
       maskTextClass,
       maskTextSelector,
@@ -1166,6 +1182,7 @@ export function serializeNodeWithId(
             mirror,
             blockClass,
             blockSelector,
+            hideSelector,
             needsMask,
             maskTextClass,
             maskTextSelector,
@@ -1218,6 +1235,7 @@ export function serializeNodeWithId(
             mirror,
             blockClass,
             blockSelector,
+            hideSelector,
             needsMask,
             maskTextClass,
             maskTextSelector,
@@ -1260,6 +1278,7 @@ function snapshot(
     mirror?: Mirror;
     blockClass?: string | RegExp;
     blockSelector?: string | null;
+    hideSelector?: string | null;
     maskTextClass?: string | RegExp;
     maskTextSelector?: string | null;
     inlineStylesheet?: boolean;
@@ -1289,6 +1308,7 @@ function snapshot(
     mirror = new Mirror(),
     blockClass = 'rr-block',
     blockSelector = null,
+    hideSelector = null,
     maskTextClass = 'rr-mask',
     maskTextSelector = null,
     inlineStylesheet = true,
@@ -1355,6 +1375,7 @@ function snapshot(
     mirror,
     blockClass,
     blockSelector,
+    hideSelector,
     maskTextClass,
     maskTextSelector,
     skipChild: false,
