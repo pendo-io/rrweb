@@ -60,7 +60,7 @@ import dom, { mutationObserverCtor } from '@rrweb/utils';
 export const mutationBuffers: MutationBuffer[] = [];
 
 const Proxy = getNativeProxy();
- 
+
 // Event.path is non-standard and used in some older browsers
 type NonStandardEvent = Omit<Event, 'composedPath'> & {
   path: EventTarget[];

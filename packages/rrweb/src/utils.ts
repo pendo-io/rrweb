@@ -86,7 +86,9 @@ export function getNativeProxy(): ProxyConstructor {
       const cleanFrame = document.createElement('iframe');
       cleanFrame.style.display = 'none';
       document.documentElement.appendChild(cleanFrame);
-      Proxy = (cleanFrame.contentWindow as Window & { Proxy: typeof Proxy })?.Proxy || window.Proxy;
+      Proxy =
+        (cleanFrame.contentWindow as Window & { Proxy: typeof Proxy })?.Proxy ||
+        window.Proxy;
       document.documentElement.removeChild(cleanFrame);
     }
   } catch (err) {
