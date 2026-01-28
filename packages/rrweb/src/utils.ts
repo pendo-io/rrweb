@@ -19,7 +19,7 @@ import {
   nativeSetTimeout,
 } from 'rrweb-snapshot';
 import { RRNode, RRIFrameElement, BaseRRNode } from 'rrdom';
-import dom from '@rrweb/utils';
+import dom, { getUntaintedProxy } from '@rrweb/utils';
 
 function getWindow(documentOrWindow: Document | IWindow): IWindow {
   const defaultView = (documentOrWindow as Document).defaultView;
@@ -73,7 +73,9 @@ export let _mirror: DeprecatedMirror = {
     console.error(DEPARTED_MIRROR_ACCESS_WARNING);
   },
 };
+
 if (typeof window !== 'undefined' && window.Proxy && window.Reflect) {
+  const Proxy = getUntaintedProxy();
   _mirror = new Proxy(_mirror, {
     get(target, prop, receiver) {
       if (prop === 'map') {
