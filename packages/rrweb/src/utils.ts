@@ -73,7 +73,30 @@ export let _mirror: DeprecatedMirror = {
     console.error(DEPARTED_MIRROR_ACCESS_WARNING);
   },
 };
+
+// Some libraries (i.e. jsPDF v1.1.135) override window.Proxy with their own implementation
+// Try to pull a clean implementation from a newly created iframe
+export function getNativeProxy(): ProxyConstructor {
+  let Proxy = window.Proxy;
+  try {
+    if (
+      typeof window.Proxy !== 'function' ||
+      !window.Proxy?.toString().includes('[native code]')
+    ) {
+      const cleanFrame = document.createElement('iframe');
+      cleanFrame.style.display = 'none';
+      document.documentElement.appendChild(cleanFrame);
+      Proxy = (cleanFrame.contentWindow as Window & { Proxy: typeof Proxy })?.Proxy || window.Proxy;
+      document.documentElement.removeChild(cleanFrame);
+    }
+  } catch (err) {
+    console.debug('Unable to get native Proxy from iframe', err);
+  }
+  return Proxy;
+}
+
 if (typeof window !== 'undefined' && window.Proxy && window.Reflect) {
+  const Proxy = getNativeProxy();
   _mirror = new Proxy(_mirror, {
     get(target, prop, receiver) {
       if (prop === 'map') {

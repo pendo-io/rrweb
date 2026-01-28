@@ -19,6 +19,7 @@ import {
   legacy_isTouchEvent,
   StyleSheetMirror,
   nowTimestamp,
+  getNativeProxy,
 } from '../utils';
 import { patch } from '@rrweb/utils';
 import type { observerParam, MutationBufferParam } from '../types';
@@ -58,6 +59,8 @@ import dom, { mutationObserverCtor } from '@rrweb/utils';
 
 export const mutationBuffers: MutationBuffer[] = [];
 
+const Proxy = getNativeProxy();
+ 
 // Event.path is non-standard and used in some older browsers
 type NonStandardEvent = Omit<Event, 'composedPath'> & {
   path: EventTarget[];
