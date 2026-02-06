@@ -7,6 +7,7 @@ import {
   inDom,
   shadowHostInDom,
   getShadowHost,
+  getNestedRule,
 } from '../src/utils';
 
 describe('Utilities for other modules', () => {
@@ -141,6 +142,105 @@ describe('Utilities for other modules', () => {
       expect(getRootShadowHost(a.childNodes[0])).toBe(a.childNodes[0]);
       expect(shadowHostInDom(a.childNodes[0])).toBeTruthy();
       expect(inDom(a.childNodes[0])).toBeTruthy();
+    });
+  });
+
+  describe('getNestedRule()', () => {
+    let styleElement: HTMLStyleElement;
+    let stylesheet: CSSStyleSheet;
+
+    beforeEach(() => {
+      // Create a style element with nested CSS rules for testing
+      styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+      stylesheet = styleElement.sheet as CSSStyleSheet;
+    });
+
+    afterEach(() => {
+      document.head.removeChild(styleElement);
+    });
+
+    it('should return a top-level rule with single index [N]', () => {
+      stylesheet.insertRule('.rule0 { color: red; }', 0);
+      stylesheet.insertRule('.rule1 { color: blue; }', 1);
+      stylesheet.insertRule('.rule2 { color: green; }', 2);
+
+      const rule0 = getNestedRule(stylesheet.cssRules, [0]);
+      expect((rule0 as CSSStyleRule).selectorText).toBe('.rule0');
+
+      const rule1 = getNestedRule(stylesheet.cssRules, [1]);
+      expect((rule1 as CSSStyleRule).selectorText).toBe('.rule1');
+
+      const rule2 = getNestedRule(stylesheet.cssRules, [2]);
+      expect((rule2 as CSSStyleRule).selectorText).toBe('.rule2');
+    });
+
+    it('should return a rule nested inside @media with index [0, N]', () => {
+      // Insert @media rule with nested rules
+      stylesheet.insertRule(
+        '@media (min-width: 100px) { .rule0 { color: red; } .rule1 { color: blue; } .rule2 { color: green; } }',
+        0,
+      );
+
+      const mediaRule = stylesheet.cssRules[0] as CSSMediaRule;
+      expect(mediaRule.cssRules.length).toBe(3);
+
+      // Access nested rules using [0, N] where 0 is the @media index
+      const nestedRule0 = getNestedRule(stylesheet.cssRules, [0, 0]);
+      expect((nestedRule0 as CSSStyleRule).selectorText).toBe('.rule0');
+
+      const nestedRule1 = getNestedRule(stylesheet.cssRules, [0, 1]);
+      expect((nestedRule1 as CSSStyleRule).selectorText).toBe('.rule1');
+
+      const nestedRule2 = getNestedRule(stylesheet.cssRules, [0, 2]);
+      expect((nestedRule2 as CSSStyleRule).selectorText).toBe('.rule2');
+    });
+
+    it('should return a rule nested inside @supports with index [0, N]', () => {
+      // Insert @supports rule with nested rules
+      stylesheet.insertRule(
+        '@supports (display: grid) { .grid-rule { display: grid; } }',
+        0,
+      );
+
+      const supportsRule = stylesheet.cssRules[0] as CSSSupportsRule;
+      expect(supportsRule.cssRules.length).toBe(1);
+
+      const nestedRule = getNestedRule(stylesheet.cssRules, [0, 0]);
+      expect((nestedRule as CSSStyleRule).selectorText).toBe('.grid-rule');
+    });
+
+    it('should return a doubly nested rule with index [0, 0, N]', () => {
+      // Insert @media containing @supports containing a rule
+      stylesheet.insertRule(
+        '@media (min-width: 100px) { @supports (display: grid) { .nested-rule { color: red; } } }',
+        0,
+      );
+
+      const mediaRule = stylesheet.cssRules[0] as CSSMediaRule;
+      const supportsRule = mediaRule.cssRules[0] as CSSSupportsRule;
+      expect(supportsRule.cssRules.length).toBe(1);
+
+      // Access doubly nested rule using [0, 0, 0]
+      const nestedRule = getNestedRule(stylesheet.cssRules, [0, 0, 0]);
+      expect((nestedRule as CSSStyleRule).selectorText).toBe('.nested-rule');
+    });
+
+    it('should handle @media at different indices in stylesheet', () => {
+      // Insert some top-level rules first
+      stylesheet.insertRule('.top-level { color: black; }', 0);
+      stylesheet.insertRule(
+        '@media (min-width: 100px) { .inside-media { color: red; } }',
+        1,
+      );
+
+      // Top-level rule at index 0
+      const topLevel = getNestedRule(stylesheet.cssRules, [0]);
+      expect((topLevel as CSSStyleRule).selectorText).toBe('.top-level');
+
+      // Nested rule: @media at index 1, rule at index 0 inside
+      const insideMedia = getNestedRule(stylesheet.cssRules, [1, 0]);
+      expect((insideMedia as CSSStyleRule).selectorText).toBe('.inside-media');
     });
   });
 });
