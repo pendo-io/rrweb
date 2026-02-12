@@ -449,10 +449,7 @@ export function getNestedRule(
   if (position.length === 1) {
     return rule;
   } else {
-    return getNestedRule(
-      (rule.cssRules[position[1]] as CSSGroupingRule).cssRules,
-      position.slice(2),
-    );
+    return getNestedRule(rule.cssRules, position.slice(1));
   }
 }
 
