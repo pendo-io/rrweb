@@ -54,9 +54,11 @@ import type {
 } from '@rrweb/types';
 import MutationBuffer from './mutation';
 import { callbackWrapper } from './error-handler';
-import dom, { mutationObserverCtor } from '@rrweb/utils';
+import dom, { mutationObserverCtor, getUntaintedProxy } from '@rrweb/utils';
 
 export const mutationBuffers: MutationBuffer[] = [];
+
+const Proxy = getUntaintedProxy();
 
 // Event.path is non-standard and used in some older browsers
 type NonStandardEvent = Omit<Event, 'composedPath'> & {
