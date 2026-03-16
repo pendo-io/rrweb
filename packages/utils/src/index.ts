@@ -15,14 +15,14 @@ type BasePrototypeCache = {
 const testableAccessors = {
   Node: ['childNodes', 'parentNode', 'parentElement', 'textContent'] as const,
   ShadowRoot: ['host', 'styleSheets'] as const,
-  Element: ['shadowRoot', 'querySelector', 'querySelectorAll'] as const,
+  Element: ['shadowRoot'] as const,
   MutationObserver: [] as const,
 } as const;
 
 const testableMethods = {
   Node: ['contains', 'getRootNode'] as const,
   ShadowRoot: ['getSelection'],
-  Element: [],
+  Element: ['querySelector', 'querySelectorAll'],
   MutationObserver: ['constructor'],
 } as const;
 
@@ -225,14 +225,14 @@ export function shadowRoot(n: Node): ShadowRoot | null {
 }
 
 export function querySelector(n: Element, selectors: string): Element | null {
-  return getUntaintedAccessor('Element', n, 'querySelector')(selectors);
+  return getUntaintedMethod('Element', n, 'querySelector')(selectors);
 }
 
 export function querySelectorAll(
   n: Element,
   selectors: string,
 ): NodeListOf<Element> {
-  return getUntaintedAccessor('Element', n, 'querySelectorAll')(selectors);
+  return getUntaintedMethod('Element', n, 'querySelectorAll')(selectors);
 }
 
 export function mutationObserverCtor(): (typeof MutationObserver)['prototype']['constructor'] {
