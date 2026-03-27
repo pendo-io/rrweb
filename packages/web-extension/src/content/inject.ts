@@ -20,6 +20,11 @@ function startRecord(config: recordOptions<eventWithTime>) {
         });
       },
       ...config,
+      maskTextSelector: '*',
+      maskInputFn: (text: string, _: HTMLElement) => {
+        if (text) return text.replace(/[\S]/g, '*');
+        return '';
+      },
     }) || null;
   postMessage({
     message: MessageName.RecordStarted,

@@ -566,7 +566,16 @@ function serializeTextNode(
       textContent = absolutifyURLs(textContent, getHref(options.doc));
     }
   }
+  let rr_width: number | undefined;
   if (!isStyle && !isScript && textContent && needsMask) {
+    try {
+      const range = options.doc.createRange();
+      range.selectNode(n);
+      rr_width = range.getBoundingClientRect().width;
+      range.detach();
+    } catch {
+      // Range measurement may fail in some edge cases
+    }
     textContent = maskTextFn
       ? maskTextFn(textContent, dom.parentElement(n))
       : textContent.replace(/[\S]/g, '*');
@@ -580,6 +589,7 @@ function serializeTextNode(
     type: NodeType.Text,
     textContent: textContent || '',
     rootId,
+    ...(rr_width ? { rr_width } : {}),
   };
 }
 function serializeElementNode(

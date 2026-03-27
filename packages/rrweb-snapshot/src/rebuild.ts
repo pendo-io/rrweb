@@ -432,6 +432,13 @@ function buildNode(
         // support legacy style
         return doc.createTextNode(adaptCssForReplay(n.textContent, cache));
       }
+      if (n.rr_width) {
+        const wrapper = doc.createElement('span');
+        wrapper.style.display = 'inline-block';
+        wrapper.style.minWidth = `${n.rr_width}px`;
+        wrapper.textContent = n.textContent;
+        return wrapper;
+      }
       return doc.createTextNode(n.textContent);
     case NodeType.CDATA:
       return doc.createCDATASection(n.textContent);

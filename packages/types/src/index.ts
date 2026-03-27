@@ -789,6 +789,11 @@ export type textNode = {
    * style mutations can still happen via an added textNode, but they don't need this attribute for correct replay
    */
   isStyle?: true;
+  /**
+   * Original width (in px) of the text node before masking was applied.
+   * Used during replay to preserve layout when masked characters are narrower.
+   */
+  rr_width?: number;
 };
 
 export type cdataNode = {
