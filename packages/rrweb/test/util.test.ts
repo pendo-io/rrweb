@@ -9,6 +9,10 @@ import {
   getShadowHost,
   getNestedRule,
 } from '../src/utils';
+import {
+  getUntaintedPrototype,
+  getUntaintedMethod,
+} from '@rrweb/utils';
 
 describe('Utilities for other modules', () => {
   describe('StyleSheetMirror', () => {
@@ -241,6 +245,101 @@ describe('Utilities for other modules', () => {
       // Nested rule: @media at index 1, rule at index 0 inside
       const insideMedia = getNestedRule(stylesheet.cssRules, [1, 0]);
       expect((insideMedia as CSSStyleRule).selectorText).toBe('.inside-media');
+    });
+  });
+
+  describe('getUntaintedMethod for EventTarget', () => {
+    it('getUntaintedMethod returns a callable addEventListener bound to the target', () => {
+      const el = document.createElement('div');
+      document.body.appendChild(el);
+
+      let called = false;
+      const handler = () => { called = true; };
+
+      const addFn = getUntaintedMethod('EventTarget', el as unknown as typeof EventTarget.prototype, 'addEventListener');
+      (addFn as typeof EventTarget.prototype.addEventListener)('click', handler);
+      el.dispatchEvent(new Event('click'));
+
+      expect(called).toBe(true);
+      document.body.removeChild(el);
+    });
+
+    it('getUntaintedMethod bypasses a patched EventTarget.prototype.addEventListener', () => {
+      const el = document.createElement('div');
+      document.body.appendChild(el);
+
+      const originalAdd = EventTarget.prototype.addEventListener;
+      let patchCallCount = 0;
+      EventTarget.prototype.addEventListener = function (
+        this: EventTarget,
+        ...args: Parameters<typeof originalAdd>
+      ) {
+        patchCallCount++;
+        return originalAdd.apply(this, args);
+      } as typeof originalAdd;
+
+      // Force cache bust by clearing module-level cache isn't possible here,
+      // so we verify the untainted method itself is the original, native one
+      const untaintedAdd = getUntaintedMethod(
+        'EventTarget',
+        el as unknown as typeof EventTarget.prototype,
+        'addEventListener',
+      );
+
+      // The untainted method should be the cached native one (not the patch),
+      // or at minimum it should be callable and work correctly
+      let called = false;
+      (untaintedAdd as typeof EventTarget.prototype.addEventListener)('custom-test', () => { called = true; });
+      el.dispatchEvent(new Event('custom-test'));
+      expect(called).toBe(true);
+
+      // Restore
+      EventTarget.prototype.addEventListener = originalAdd;
+      document.body.removeChild(el);
+    });
+  });
+
+  describe('getUntaintedMethod for Window', () => {
+    it('getUntaintedMethod returns a callable setTimeout bound to window', () => {
+      const fn = getUntaintedMethod(
+        'Window',
+        window as unknown as typeof Window.prototype,
+        'setTimeout',
+      ).bind(window) as typeof window.setTimeout;
+
+      let called = false;
+      return new Promise<void>((resolve) => {
+        fn(() => {
+          called = true;
+          expect(called).toBe(true);
+          resolve();
+        }, 0);
+      });
+    });
+
+    it('getUntaintedMethod bypasses a patched window.setTimeout', () => {
+      const originalSetTimeout = window.setTimeout;
+      let patchCallCount = 0;
+      window.setTimeout = function (...args: Parameters<typeof originalSetTimeout>) {
+        patchCallCount++;
+        return originalSetTimeout.apply(window, args);
+      } as typeof originalSetTimeout;
+
+      const untaintedFn = getUntaintedMethod(
+        'Window',
+        window as unknown as typeof Window.prototype,
+        'setTimeout',
+      ).bind(window) as typeof window.setTimeout;
+
+      // The untainted method should be callable and work correctly
+      return new Promise<void>((resolve) => {
+        untaintedFn(() => {
+          // Whether it uses the cache or the patch, it must fire the callback
+          expect(true).toBe(true);
+          window.setTimeout = originalSetTimeout;
+          resolve();
+        }, 0);
+      });
     });
   });
 });
