@@ -14,8 +14,9 @@ import type {
   documentTypeNode,
   textNode,
   elementNode,
+  IWindow,
 } from '@rrweb/types';
-import dom, { getUntaintedMethod } from '@rrweb/utils';
+import dom from '@rrweb/utils';
 
 export function isElement(n: Node): n is Element {
   return n.nodeType === n.ELEMENT_NODE;
@@ -39,9 +40,32 @@ export function isNativeShadowDom(shadowRoot: ShadowRoot): boolean {
   return Object.prototype.toString.call(shadowRoot) === '[object ShadowRoot]';
 }
 
+type WindowWithAngularZone = IWindow & {
+  Zone?: {
+    __symbol__?: (key: keyof IWindow) => string;
+  };
+  [key: string]: any;
+};
+
+export function getNative<T>(
+  symbolName: keyof IWindow,
+  windowObj: IWindow = window,
+): T {
+  const windowWithZone = windowObj as WindowWithAngularZone;
+  const angularZoneSymbol = windowWithZone?.Zone?.__symbol__?.(symbolName);
+  if (angularZoneSymbol) {
+    const zonelessImpl = windowWithZone[angularZoneSymbol] as T;
+    if (zonelessImpl) {
+      return zonelessImpl;
+    }
+  }
+
+  return windowWithZone[symbolName] as T;
+}
+
 export const nativeSetTimeout =
   typeof window !== 'undefined'
-    ? getUntaintedMethod('Window', window as unknown as typeof Window.prototype, 'setTimeout').bind(window)
+    ? getNative<typeof window.setTimeout>('setTimeout').bind(window)
     : global.setTimeout;
 
 /**
