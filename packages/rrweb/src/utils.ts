@@ -15,33 +15,19 @@ import {
   isShadowRoot,
   IGNORED_NODE,
   classMatchesRegex,
-  getNative,
   nativeSetTimeout,
 } from 'rrweb-snapshot';
 import { RRNode, RRIFrameElement, BaseRRNode } from 'rrdom';
 import dom, { getUntaintedProxy } from '@rrweb/utils';
-
-function getWindow(documentOrWindow: Document | IWindow): IWindow {
-  const defaultView = (documentOrWindow as Document).defaultView;
-  return (defaultView ? defaultView : documentOrWindow) as IWindow;
-}
 
 export function on(
   type: string,
   fn: EventListenerOrEventListenerObject,
   target: Document | IWindow = document,
 ): listenerHandler {
-  const windowObj = getWindow(target);
-  const nativeAddEventListener = getNative<typeof window.addEventListener>(
-    'addEventListener',
-    windowObj,
-  );
-  const nativeRemoveEventListener = getNative<
-    typeof window.removeEventListener
-  >('removeEventListener', windowObj);
   const options = { capture: true, passive: true };
-  nativeAddEventListener.call(target, type, fn, options);
-  return () => nativeRemoveEventListener.call(target, type, fn, options);
+  dom.addEventListener(target as EventTarget, type, fn, options);
+  return () => dom.removeEventListener(target as EventTarget, type, fn, options);
 }
 
 // https://github.com/rrweb-io/rrweb/pull/407
