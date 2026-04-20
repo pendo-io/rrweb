@@ -1,15 +1,17 @@
-type PrototypeOwner = Node | ShadowRoot | MutationObserver | Element;
+type PrototypeOwner = Node | ShadowRoot | MutationObserver | Element | EventTarget;
 type TypeofPrototypeOwner =
   | typeof Node
   | typeof ShadowRoot
   | typeof MutationObserver
-  | typeof Element;
+  | typeof Element
+  | typeof EventTarget;
 
 type BasePrototypeCache = {
   Node: typeof Node.prototype;
   ShadowRoot: typeof ShadowRoot.prototype;
   MutationObserver: typeof MutationObserver.prototype;
   Element: typeof Element.prototype;
+  EventTarget: typeof EventTarget.prototype;
 };
 
 const testableAccessors = {
@@ -17,6 +19,7 @@ const testableAccessors = {
   ShadowRoot: ['host', 'styleSheets'] as const,
   Element: ['shadowRoot'] as const,
   MutationObserver: [] as const,
+  EventTarget: [] as const,
 } as const;
 
 const testableMethods = {
@@ -24,6 +27,7 @@ const testableMethods = {
   ShadowRoot: ['getSelection'],
   Element: ['querySelector', 'querySelectorAll'],
   MutationObserver: ['constructor'],
+  EventTarget: ['addEventListener', 'removeEventListener'],
 } as const;
 
 const untaintedBasePrototype: Partial<BasePrototypeCache> = {};
@@ -176,6 +180,30 @@ export function getUntaintedMethod<
       instance,
     ) as BasePrototypeCache[K][T];
 
+  // zone.js spoofs patched functions' toString() to include "[native code]", so the
+  // prototype-based [native code] check in getUntaintedPrototype can't be trusted.
+  // zone.js stores the originals under Zone.__symbol__(methodName):
+  //   - global methods (e.g. setTimeout): on globalThis directly
+  //   - prototype methods (e.g. addEventListener): on the class prototype,
+  //     i.e. globalThis[key].prototype[Zone.__symbol__(method)]
+  const zoneSymbol = (globalThis as WindowWithZone)?.Zone?.__symbol__?.(
+    String(method),
+  );
+  if (zoneSymbol) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const classProto = (globalThis as Record<string, any>)[key]
+      ?.prototype as Record<string, unknown> | undefined;
+    const nativeFromZone =
+      (globalThis as Record<string, unknown>)[zoneSymbol] ??
+      classProto?.[zoneSymbol];
+    if (typeof nativeFromZone === 'function') {
+      untaintedMethodCache[cacheKey] = nativeFromZone as BaseMethod<K>;
+      return (nativeFromZone as BaseMethod<K>).bind(
+        instance,
+      ) as BasePrototypeCache[K][T];
+    }
+  }
+
   const untaintedPrototype = getUntaintedPrototype(key);
   const untaintedMethod = untaintedPrototype[method];
 
@@ -233,6 +261,28 @@ export function querySelectorAll(
   selectors: string,
 ): NodeListOf<Element> {
   return getUntaintedMethod('Element', n, 'querySelectorAll')(selectors);
+}
+
+export function addEventListener(
+  n: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | AddEventListenerOptions,
+): void {
+  getUntaintedMethod('EventTarget', n, 'addEventListener')(type, listener, options);
+}
+
+export function removeEventListener(
+  n: EventTarget,
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: boolean | EventListenerOptions,
+): void {
+  getUntaintedMethod('EventTarget', n, 'removeEventListener')(
+    type,
+    listener,
+    options,
+  );
 }
 
 export function mutationObserverCtor(): (typeof MutationObserver)['prototype']['constructor'] {
@@ -317,6 +367,8 @@ export default {
   shadowRoot,
   querySelector,
   querySelectorAll,
+  addEventListener,
+  removeEventListener,
   mutationObserver: mutationObserverCtor,
   patch,
 };
