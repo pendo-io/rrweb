@@ -648,12 +648,7 @@ function initStyleSheetObserver(
             adds: [{ rule, index }],
           });
         }
-        try {
-          return target.apply(thisArg, argumentsList);
-        } catch (e) {
-          // Rules valid in one browser may be rejected by another.
-          // Consume the parse error
-        }
+        return target.apply(thisArg, argumentsList);
       },
     ),
   });
@@ -693,11 +688,7 @@ function initStyleSheetObserver(
             removes: [{ index }],
           });
         }
-        try {
-          return target.apply(thisArg, argumentsList);
-        } catch (e) {
-          // Index may be out of bounds if the stylesheet was mutated externally
-        }
+        return target.apply(thisArg, argumentsList);
       },
     ),
   });
@@ -843,12 +834,7 @@ function initStyleSheetObserver(
                 ],
               });
             }
-            try {
-              return target.apply(thisArg, argumentsList);
-            } catch (e) {
-              // Rules valid in one browser may be rejected by another.
-              // Consume the parse error
-            }
+            return target.apply(thisArg, argumentsList);
           },
         ),
       },
@@ -880,11 +866,7 @@ function initStyleSheetObserver(
                 ],
               });
             }
-            try {
-              return target.apply(thisArg, argumentsList);
-            } catch (e) {
-              // Index may be out of bounds if the stylesheet was mutated externally
-            }
+            return target.apply(thisArg, argumentsList);
           },
         ),
       },
