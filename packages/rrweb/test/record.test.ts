@@ -530,6 +530,117 @@ describe('record', function (this: ISuite) {
     it('captures nested stylesheet rules', captureNestedStylesheetRulesTest);
   });
 
+  it('does not throw when deleteRule is called with an out-of-bounds index', async () => {
+    await ctx.page.evaluate(() => {
+      const { record } = (window as unknown as IWindow).rrweb;
+      record({ emit: (window as unknown as IWindow).emit });
+
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+      const styleSheet = <CSSStyleSheet>styleElement.sheet;
+
+      setTimeout(() => {
+        styleSheet.insertRule('body { background: #000; }');
+        styleSheet.deleteRule(0); // valid delete
+        styleSheet.deleteRule(0); // out-of-bounds: no rules remain, should not throw
+        styleSheet.insertRule('body { color: #fff; }'); // recording should continue
+      }, 0);
+    });
+    await ctx.page.waitForTimeout(50);
+
+    const styleSheetRuleEvents = ctx.events.filter(
+      (e) =>
+        e.type === EventType.IncrementalSnapshot &&
+        e.data.source === IncrementalSource.StyleSheetRule,
+    );
+    const removeEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).removes),
+    );
+    const addEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).adds),
+    );
+    // both deleteRule calls emit a remove event (callback fires before native call)
+    expect(removeEvents.length).toEqual(2);
+    expect(addEvents.length).toEqual(2);
+  });
+
+  it('does not throw when deleteRule follows a failed insertRule (index never created)', async () => {
+    // If insertRule is silently swallowed (e.g., vendor-prefixed rule rejected by
+    // the browser), the rule is never added. A subsequent deleteRule targeting that
+    // index is then out-of-bounds and must not throw.
+    await ctx.page.evaluate(() => {
+      const { record } = (window as unknown as IWindow).rrweb;
+      record({ emit: (window as unknown as IWindow).emit });
+
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+      const styleSheet = <CSSStyleSheet>styleElement.sheet;
+
+      setTimeout(() => {
+        // This insertRule will be rejected by the browser (vendor-prefixed, non-Chrome)
+        // but the proxy swallows the error and emits an add event anyway.
+        styleSheet.insertRule('.foo::-moz-focus-inner { border-style: none; }');
+        // The rule was never actually inserted, so index 0 doesn't exist.
+        // Without the fix, this throws IndexSizeError.
+        styleSheet.deleteRule(0);
+        // Subsequent operations should still work.
+        styleSheet.insertRule('body { color: #fff; }');
+      }, 0);
+    });
+    await ctx.page.waitForTimeout(50);
+
+    const styleSheetRuleEvents = ctx.events.filter(
+      (e) =>
+        e.type === EventType.IncrementalSnapshot &&
+        e.data.source === IncrementalSource.StyleSheetRule,
+    );
+    const addEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).adds),
+    );
+    const removeEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).removes),
+    );
+    // Both insertRule calls emitted add events; deleteRule emitted a remove event.
+    expect(addEvents.length).toEqual(2);
+    expect(removeEvents.length).toEqual(1);
+  });
+
+  it('does not throw when deleteRule is called with an out-of-bounds index on a nested CSS rule', async () => {
+    await ctx.page.evaluate(() => {
+      const { record } = (window as unknown as IWindow).rrweb;
+      record({ emit: (window as unknown as IWindow).emit });
+
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+      const styleSheet = <CSSStyleSheet>styleElement.sheet;
+      styleSheet.insertRule('@media {}');
+      const atMediaRule = styleSheet.cssRules[0] as CSSMediaRule;
+
+      setTimeout(() => {
+        atMediaRule.insertRule('body { background: #000; }', 0);
+        atMediaRule.deleteRule(0); // valid delete
+        atMediaRule.deleteRule(0); // out-of-bounds: no rules remain in @media, should not throw
+        atMediaRule.insertRule('body { color: #fff; }', 0); // recording should continue
+      }, 0);
+    });
+    await ctx.page.waitForTimeout(50);
+
+    const styleSheetRuleEvents = ctx.events.filter(
+      (e) =>
+        e.type === EventType.IncrementalSnapshot &&
+        e.data.source === IncrementalSource.StyleSheetRule,
+    );
+    const removeEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).removes),
+    );
+    const addEvents = styleSheetRuleEvents.filter((e) =>
+      Boolean((e.data as styleSheetRuleData).adds),
+    );
+    // both deleteRule calls emit a remove event (callback fires before native call)
+    expect(removeEvents.length).toEqual(2);
+    expect(addEvents.length).toEqual(2);
+  });
+
   it('captures style property changes', async () => {
     await ctx.page.evaluate(() => {
       const { record } = (window as unknown as IWindow).rrweb;

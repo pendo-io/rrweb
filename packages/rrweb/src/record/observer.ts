@@ -693,7 +693,11 @@ function initStyleSheetObserver(
             removes: [{ index }],
           });
         }
-        return target.apply(thisArg, argumentsList);
+        try {
+          return target.apply(thisArg, argumentsList);
+        } catch (e) {
+          // Index may be out of bounds if the stylesheet was mutated externally
+        }
       },
     ),
   });
@@ -876,7 +880,11 @@ function initStyleSheetObserver(
                 ],
               });
             }
-            return target.apply(thisArg, argumentsList);
+            try {
+              return target.apply(thisArg, argumentsList);
+            } catch (e) {
+              // Index may be out of bounds if the stylesheet was mutated externally
+            }
           },
         ),
       },
