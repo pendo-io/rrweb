@@ -72,6 +72,94 @@ describe('rebuild', function () {
     });
   });
 
+  describe('resolveAssetUrl', function () {
+    function buildImg(
+      attributes: Record<string, string>,
+      resolveAssetUrl?: (src: string) => string | undefined,
+    ): HTMLImageElement {
+      return buildNodeWithSN(
+        {
+          id: 1,
+          tagName: 'img',
+          type: NodeType.Element,
+          attributes,
+          childNodes: [],
+        },
+        { doc: document, mirror, hackCss: false, cache, resolveAssetUrl },
+      ) as HTMLImageElement;
+    }
+
+    it('rewrites an img src the host resolves', function () {
+      const node = buildImg({ src: 'custom-scheme:abc123' }, (src) =>
+        src === 'custom-scheme:abc123'
+          ? 'https://cdn.test/abc123.png'
+          : undefined,
+      );
+      expect(node.getAttribute('src')).toBe('https://cdn.test/abc123.png');
+    });
+
+    it('leaves the src unchanged when the resolver returns undefined', function () {
+      const node = buildImg(
+        { src: 'http://example.com/image.png' },
+        () => undefined,
+      );
+      expect(node.getAttribute('src')).toBe('http://example.com/image.png');
+    });
+
+    it('leaves the src unchanged when no resolver is configured', function () {
+      const node = buildImg({ src: 'custom-scheme:abc123' });
+      expect(node.getAttribute('src')).toBe('custom-scheme:abc123');
+    });
+
+    it('does not offer non-src attributes to the resolver', function () {
+      const seen: string[] = [];
+      const node = buildImg({ src: 'a', alt: 'b', title: 'c' }, (src) => {
+        seen.push(src);
+        return undefined;
+      });
+      expect(seen).toEqual(['a']);
+      expect(node.getAttribute('alt')).toBe('b');
+    });
+
+    it('resolves nested images, not only the root node', function () {
+      const root = buildNodeWithSN(
+        {
+          id: 1,
+          tagName: 'div',
+          type: NodeType.Element,
+          attributes: {},
+          childNodes: [
+            {
+              id: 2,
+              tagName: 'span',
+              type: NodeType.Element,
+              attributes: {},
+              childNodes: [
+                {
+                  id: 3,
+                  tagName: 'img',
+                  type: NodeType.Element,
+                  attributes: { src: 'custom-scheme:deep' },
+                  childNodes: [],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          doc: document,
+          mirror,
+          hackCss: false,
+          cache,
+          resolveAssetUrl: () => 'https://cdn.test/deep.png',
+        },
+      ) as HTMLElement;
+      expect(root.querySelector('img')?.getAttribute('src')).toBe(
+        'https://cdn.test/deep.png',
+      );
+    });
+  });
+
   describe('rr_width/rr_height', function () {
     it('rebuild blocked element with correct dimensions', function () {
       const node = buildNodeWithSN(

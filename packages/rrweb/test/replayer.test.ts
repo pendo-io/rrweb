@@ -30,6 +30,7 @@ import adoptedStyleSheetModification from './events/adopted-style-sheet-modifica
 import documentReplacementEvents from './events/document-replacement';
 import hoverInIframeShadowDom from './events/iframe-shadowdom-hover';
 import customElementDefineClass from './events/custom-element-define-class';
+import assetSrcMutationEvents from './events/asset-src-mutation';
 import { ReplayerEvents } from '@rrweb/types';
 
 interface ISuite {
@@ -515,6 +516,54 @@ describe('replayer', function () {
           (element as HTMLIFrameElement)!.contentWindow!.scrollY,
       ),
     ).toEqual(0);
+  });
+
+  it('resolves img src via resolveAssetUrl on both the snapshot and mutation paths', async () => {
+    await page.evaluate(`
+      events = ${JSON.stringify(assetSrcMutationEvents)};
+      const { Replayer } = rrweb;
+      var replayer = new Replayer(events, {
+        resolveAssetUrl: (src) =>
+          src.startsWith('custom-scheme:')
+            ? 'https://cdn.test/' + src.slice('custom-scheme:'.length) + '.png'
+            : undefined,
+      });
+      replayer.pause(200);
+    `);
+    const iframe = await page.$('iframe');
+    const contentDocument = await iframe!.contentFrame()!;
+
+    // rebuild path
+    expect(
+      await contentDocument!.$eval('img', (el: Element) =>
+        el.getAttribute('src'),
+      ),
+    ).toEqual('https://cdn.test/first.png');
+
+    // mutation path: the same node's src changes mid-session
+    await page.evaluate('replayer.pause(600);');
+    await waitForRAF(page);
+    expect(
+      await contentDocument!.$eval('img', (el: Element) =>
+        el.getAttribute('src'),
+      ),
+    ).toEqual('https://cdn.test/second.png');
+  });
+
+  it('leaves img src untouched when no resolveAssetUrl is configured', async () => {
+    await page.evaluate(`
+      events = ${JSON.stringify(assetSrcMutationEvents)};
+      const { Replayer } = rrweb;
+      var replayer = new Replayer(events, {});
+      replayer.pause(600);
+    `);
+    const iframe = await page.$('iframe');
+    const contentDocument = await iframe!.contentFrame()!;
+    expect(
+      await contentDocument!.$eval('img', (el: Element) =>
+        el.getAttribute('src'),
+      ),
+    ).toEqual('custom-scheme:second');
   });
 
   it('can fast forward input events', async () => {

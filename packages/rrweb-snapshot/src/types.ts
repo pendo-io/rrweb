@@ -71,6 +71,11 @@ export type MaskInputFn = (text: string, element: HTMLElement) => string;
 
 export type KeepIframeSrcFn = (src: string) => boolean;
 
+/**
+ * Rewrites an image `src` before it reaches the DOM. Returning undefined leaves it unchanged.
+ */
+export type AssetUrlResolver = (src: string) => string | undefined;
+
 export type BuildCache = {
   stylesWithHoverClass: Map<string, string>;
 };

@@ -6,7 +6,7 @@ import {
   type elementNode,
   type legacyAttributes,
 } from '@rrweb/types';
-import { type tagMap, type BuildCache } from './types';
+import { type tagMap, type BuildCache, type AssetUrlResolver } from './types';
 import {
   isElement,
   Mirror,
@@ -195,9 +195,10 @@ function buildNode(
     doc: Document;
     hackCss: boolean;
     cache: BuildCache;
+    resolveAssetUrl?: AssetUrlResolver;
   },
 ): Node | null {
-  const { doc, hackCss, cache } = options;
+  const { doc, hackCss, cache, resolveAssetUrl } = options;
   switch (n.type) {
     case NodeType.Document:
       return doc.implementation.createDocument(null, '', null);
@@ -324,6 +325,11 @@ function buildNode(
             node.setAttribute(
               'rrweb-original-srcset',
               n.attributes.srcset as string,
+            );
+          } else if (tagName === 'img' && name === 'src' && resolveAssetUrl) {
+            node.setAttribute(
+              name,
+              resolveAssetUrl(value.toString()) ?? value.toString(),
             );
           } else {
             node.setAttribute(name, value.toString());
@@ -455,6 +461,7 @@ export function buildNodeWithSN(
      */
     afterAppend?: (n: Node, id: number) => unknown;
     cache: BuildCache;
+    resolveAssetUrl?: AssetUrlResolver;
   },
 ): Node | null {
   const {
@@ -464,6 +471,7 @@ export function buildNodeWithSN(
     hackCss = true,
     afterAppend,
     cache,
+    resolveAssetUrl,
   } = options;
   /**
    * Add a check to see if the node is already in the mirror. If it is, we can skip the whole process.
@@ -478,7 +486,7 @@ export function buildNodeWithSN(
     // For safety concern, check if the node in mirror is the same as the node we are trying to build
     if (isNodeMetaEqual(meta, n)) return mirror.getNode(n.id);
   }
-  let node = buildNode(n, { doc, hackCss, cache });
+  let node = buildNode(n, { doc, hackCss, cache, resolveAssetUrl });
   if (!node) {
     return null;
   }
@@ -530,6 +538,7 @@ export function buildNodeWithSN(
         hackCss,
         afterAppend,
         cache,
+        resolveAssetUrl,
       });
       if (!childNode) {
         console.warn('Failed to rebuild', childN);
@@ -619,6 +628,7 @@ function rebuild(
     afterAppend?: (n: Node, id: number) => unknown;
     cache: BuildCache;
     mirror: Mirror;
+    resolveAssetUrl?: AssetUrlResolver;
   },
 ): Node | null {
   const {
@@ -628,6 +638,7 @@ function rebuild(
     afterAppend,
     cache,
     mirror = new Mirror(),
+    resolveAssetUrl,
   } = options;
   const node = buildNodeWithSN(n, {
     doc,
@@ -636,6 +647,7 @@ function rebuild(
     hackCss,
     afterAppend,
     cache,
+    resolveAssetUrl,
   });
   visit(mirror, (visitedNode) => {
     if (onVisit) {

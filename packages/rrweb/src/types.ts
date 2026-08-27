@@ -4,6 +4,7 @@ import type {
   SlimDOMOptions,
   MaskInputFn,
   MaskTextFn,
+  AssetUrlResolver,
 } from 'rrweb-snapshot';
 import type { IframeManager } from './record/iframe-manager';
 import type { ShadowDomManager } from './record/shadow-dom-manager';
@@ -194,6 +195,11 @@ export type playerConfig = {
         strokeStyle?: string;
       };
   unpackFn?: UnpackFn;
+  /**
+   * Rewrites an image `src` before it is written to the replayed DOM, letting the host
+   * resolve its own reference scheme. Returning undefined leaves the value unchanged.
+   */
+  resolveAssetUrl?: AssetUrlResolver;
   useVirtualDom: boolean;
   logger: {
     log: (...args: Parameters<typeof console.log>) => void;

@@ -852,6 +852,7 @@ export class Replayer {
       afterAppend,
       cache: this.cache,
       mirror: this.mirror,
+      resolveAssetUrl: this.config.resolveAssetUrl,
     });
     afterAppend(this.iframe.contentDocument, event.data.node.id);
 
@@ -1571,6 +1572,7 @@ export class Replayer {
         skipChild: true,
         hackCss: true,
         cache: this.cache,
+        resolveAssetUrl: this.config.resolveAssetUrl,
         /**
          * caveat: `afterAppend` only gets called on child nodes of target
          * we have to call it again below when this target was added to the DOM
@@ -1865,6 +1867,15 @@ export class Replayer {
                 if (tn) {
                   textarea.appendChild(tn as TNode);
                 }
+              } else if (
+                attributeName === 'src' &&
+                target.nodeName === 'IMG' &&
+                this.config.resolveAssetUrl
+              ) {
+                (target as Element | RRElement).setAttribute(
+                  attributeName,
+                  this.config.resolveAssetUrl(value) ?? value,
+                );
               } else {
                 (target as Element | RRElement).setAttribute(
                   attributeName,
