@@ -123,6 +123,33 @@ export default defineConfig({
       [path.resolve(__dirname, 'src/content/inject.ts')],
       'iife',
     ),
+    // content/index.ts now imports rrweb's record() directly (isolated-world
+    // test), which pulls in a CSS-parsing dependency whose minified output
+    // contains a literal U+FFFE (reversed-BOM noncharacter) as a raw UTF-8
+    // byte sequence rather than an escape. That byte is already present in
+    // content/inject.ts's build too, but inject.js is only ever loaded via an
+    // injected <script> tag, never as a declared manifest content_scripts
+    // entry, so it never hits Chrome's stricter content-script encoding
+    // validation. content/index.ts IS a content_scripts entry, and Chrome
+    // rejects it with a misleading "isn't UTF-8 encoded" error. Force esbuild
+    // to escape non-ASCII output (its own default, just overridden to 'utf8'
+    // somewhere in this pipeline) so no raw multi-byte characters land in
+    // the content-script bundle at all.
+    {
+      name: 'ascii-charset-for-content-script',
+      config(config) {
+        const entry = config.build?.lib && config.build.lib.entry;
+        const matches =
+          typeof entry === 'string'
+            ? entry === 'content/index.ts'
+            : Array.isArray(entry)
+              ? entry.includes('content/index.ts')
+              : !!entry && Object.values(entry).includes('content/index.ts');
+        if (matches) {
+          config.esbuild = { ...(config.esbuild || {}), charset: 'ascii' };
+        }
+      },
+    } as PluginOption,
     process.env.ZIP === 'true' &&
       zip({
         inDir: `dist/${process.env.TARGET_BROWSER || 'chrome'}`,

@@ -1,4 +1,6 @@
 import Browser from 'webextension-polyfill';
+import { record } from 'rrweb';
+import type { eventWithTime } from '@rrweb/types';
 import {
   type LocalData,
   LocalDataKey,
@@ -14,6 +16,26 @@ import Channel from '~/utils/channel';
 import { isInCrossOriginIFrame } from '~/utils';
 
 const channel = new Channel();
+
+/**
+ * ISOLATED-WORLD TEST: run record() directly in this content script instead
+ * of bridging into the page via an injected <script> tag (see content/inject.ts,
+ * now unused by this path). This content script is declared in manifest.json
+ * with no `world` override, so it runs in Chrome's default ISOLATED world —
+ * same shape as pendo-browser-extension's agent-content.js injection.
+ *
+ * Expectation if the isolated-world theory is right: full snapshots and
+ * newly-added <style> nodes still capture fine (direct cssRules reads), but
+ * IncrementalSource.StyleSheetRule (8) / the ongoing AdoptedStyleSheet path
+ * never fire for page-driven (main-world) insertRule/replaceSync/adoptedStyleSheets
+ * calls, even though the page itself renders correctly. Flip by adding
+ * "world": "MAIN" to this entry in manifest.json and rebuilding to compare.
+ */
+function postSelfMessage(message: unknown) {
+  if (!isInCrossOriginIFrame()) window.postMessage(message, location.origin);
+}
+
+let stopFn: (() => void) | null = null;
 
 void (() => {
   window.addEventListener(
@@ -57,7 +79,7 @@ async function initMainPage() {
   let stopResponseCb: ((response: RecordStoppedMessage) => void) | undefined =
     undefined;
   channel.provide(ServiceName.StopRecord, () => {
-    window.postMessage({ message: MessageName.StopRecord });
+    stopRecord();
     return new Promise((resolve) => {
       stopResponseCb = (response: RecordStoppedMessage) => {
         stopResponseCb = undefined;
@@ -115,11 +137,7 @@ async function initCrossOriginIframe() {
       const newStatus =
         statusChange.newValue as LocalData[LocalDataKey.recorderStatus];
       if (newStatus.status === RecorderStatus.RECORDING) startRecord();
-      else
-        window.postMessage(
-          { message: MessageName.StopRecord },
-          location.origin,
-        );
+      else stopRecord();
     }
   });
   const localData = (await Browser.storage.local.get()) as LocalData;
@@ -131,10 +149,33 @@ async function initCrossOriginIframe() {
 }
 
 function startRecord() {
-  const scriptEl = document.createElement('script');
-  scriptEl.src = Browser.runtime.getURL('content/inject.js');
-  document.documentElement.appendChild(scriptEl);
-  scriptEl.onload = () => {
-    document.documentElement.removeChild(scriptEl);
-  };
+  stopFn =
+    record({
+      emit: (event: eventWithTime) => {
+        postSelfMessage({
+          message: MessageName.EmitEvent,
+          event,
+        } as EmitEventMessage);
+      },
+      recordCrossOriginIframes: true,
+    }) || null;
+  postSelfMessage({
+    message: MessageName.RecordStarted,
+    startTimestamp: Date.now(),
+  } as RecordStartedMessage);
+}
+
+function stopRecord() {
+  if (stopFn) {
+    try {
+      stopFn();
+    } catch (e) {
+      //
+    }
+    stopFn = null;
+  }
+  postSelfMessage({
+    message: MessageName.RecordStopped,
+    endTimestamp: Date.now(),
+  } as RecordStoppedMessage);
 }
