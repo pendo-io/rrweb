@@ -29,6 +29,7 @@ import adoptedStyleSheet from './events/adopted-style-sheet';
 import adoptedStyleSheetModification from './events/adopted-style-sheet-modification';
 import documentReplacementEvents from './events/document-replacement';
 import hoverInIframeShadowDom from './events/iframe-shadowdom-hover';
+import backwardSeekStaleLastPlayedEvents from './events/backward-seek-stale-last-played';
 import customElementDefineClass from './events/custom-element-define-class';
 import { ReplayerEvents } from '@rrweb/types';
 
@@ -1146,6 +1147,45 @@ describe('replayer', function () {
     // No warnings should be logged.
     expect(warningThrown).not.toHaveBeenCalled();
     // No errors should be thrown.
+    expect(errorThrown).not.toHaveBeenCalled();
+  });
+
+  it('should not lose track of nodes after a backward seek wipes the DOM mirror', async () => {
+    await page.evaluate(
+      `events = ${JSON.stringify(backwardSeekStaleLastPlayedEvents)}`,
+    );
+    const warningThrown = vi.fn();
+    page.on('console', warningThrown);
+    const errorThrown = vi.fn();
+    page.on('pageerror', errorThrown);
+
+    await page.evaluate(`
+      const { Replayer } = rrweb;
+      const replayer = new Replayer(events);
+      // seek forward past the node's add and one attribute change
+      replayer.play(1001);
+      replayer.pause();
+      // seek backward to the very start - a genuine backward jump, past everything
+      replayer.play(0);
+      replayer.pause();
+      // seek forward again, past a second attribute change on that same node
+      replayer.play(2001);
+      replayer.pause();
+    `);
+    await waitForRAF(page);
+
+    const iframe = await page.$('iframe');
+    const contentDocument = await iframe!.contentFrame()!;
+    // the div added at 200 is back in the DOM after the backward seek
+    expect(await contentDocument!.$('body > div')).not.toBeNull();
+    // and carries the attribute change from 2000
+    expect(
+      await contentDocument!.$eval('body > div', (element) =>
+        element.getAttribute('data-test'),
+      ),
+    ).toEqual('b');
+
+    expect(warningThrown).not.toHaveBeenCalled();
     expect(errorThrown).not.toHaveBeenCalled();
   });
 

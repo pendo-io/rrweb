@@ -189,6 +189,7 @@ export function createPlayerService(
           }
           if (baselineTime < (lastPlayedTimestamp || 0)) {
             emitter.emit(ReplayerEvents.PlayBack);
+            ctx.lastPlayedEvent = null;
           }
 
           const syncEvents = new Array<eventWithTime>();
@@ -197,7 +198,7 @@ export function createPlayerService(
               lastPlayedTimestamp &&
               lastPlayedTimestamp < baselineTime &&
               (event.timestamp <= lastPlayedTimestamp ||
-                event === lastPlayedEvent)
+                event === ctx.lastPlayedEvent)
             ) {
               continue;
             }
