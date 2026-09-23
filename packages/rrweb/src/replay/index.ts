@@ -4,6 +4,7 @@ import {
   buildNodeWithSN,
   type BuildCache,
   createCache,
+  createSandboxedIframe,
   Mirror,
   createMirror,
   toLowerCase,
@@ -119,6 +120,7 @@ function indicatesTouchDevice(e: eventWithTime) {
 export class Replayer {
   public wrapper: HTMLDivElement;
   public iframe: HTMLIFrameElement;
+  private UNSAFE_replayCanvas = false;
 
   public service: ReturnType<typeof createPlayerService>;
   public speedService: ReturnType<typeof createSpeedService>;
@@ -268,7 +270,7 @@ export class Replayer {
               this.virtualDom.mirror,
             );
           } catch (e) {
-            console.warn(e);
+            this.warn(e);
           }
 
         this.virtualDom.destroyTree();
@@ -494,6 +496,9 @@ export class Replayer {
    * Get the actual time offset the player is at now compared to the first event.
    */
   public getCurrentTime(): number {
+    if (this.config.liveMode) {
+      this.timer.updateLiveTime();
+    }
     return this.timer.timeOffset + this.getTimeOffset();
   }
 
@@ -617,16 +622,20 @@ export class Replayer {
       this.wrapper.appendChild(this.mouseTail);
     }
 
-    this.iframe = document.createElement('iframe');
-    const attributes = ['allow-same-origin'];
     if (this.config.UNSAFE_replayCanvas) {
-      attributes.push('allow-scripts');
+      this.iframe = document.createElement('iframe');
+      this.iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts');
+      this.wrapper.appendChild(this.iframe);
+      this.UNSAFE_replayCanvas = true;
+    } else {
+      this.iframe = createSandboxedIframe({
+        root: this.wrapper,
+      });
+      this.UNSAFE_replayCanvas = false;
     }
     // hide iframe before first meta event
     this.iframe.style.display = 'none';
-    this.iframe.setAttribute('sandbox', attributes.join(' '));
     this.disableInteract();
-    this.wrapper.appendChild(this.iframe);
     if (this.iframe.contentWindow && this.iframe.contentDocument) {
       smoothscrollPolyfill(
         this.iframe.contentWindow,
@@ -653,7 +662,6 @@ export class Replayer {
       switch (event.type) {
         case EventType.DomContentLoaded:
         case EventType.Load:
-        case EventType.Custom:
           continue;
         case EventType.FullSnapshot:
         case EventType.Meta:
@@ -852,6 +860,7 @@ export class Replayer {
       afterAppend,
       cache: this.cache,
       mirror: this.mirror,
+      UNSAFE_allowUnprotectedRebuild: this.UNSAFE_replayCanvas,
     });
     afterAppend(this.iframe.contentDocument, event.data.node.id);
 
@@ -1485,7 +1494,7 @@ export class Replayer {
     const legacy_missingNodeMap: missingNodeMap = {
       ...this.legacy_missingNodeRetryMap,
     };
-    const queue: addedNodeMutation[] = [];
+    const legacy_queue: addedNodeMutation[] = [];
 
     // next not present at this moment
     const nextNotInDOM = (mutation: addedNodeMutation) => {
@@ -1517,7 +1526,7 @@ export class Replayer {
           // is newly added document, maybe the document node of an iframe
           return this.newDocumentQueue.push(mutation);
         }
-        return queue.push(mutation);
+        return legacy_queue.push(mutation);
       }
 
       if (mutation.node.isShadow) {
@@ -1537,7 +1546,7 @@ export class Replayer {
         next = mirror.getNode(mutation.nextId);
       }
       if (nextNotInDOM(mutation)) {
-        return queue.push(mutation);
+        return legacy_queue.push(mutation);
       }
 
       if (mutation.node.rootId && !mirror.getNode(mutation.node.rootId)) {
@@ -1731,10 +1740,10 @@ export class Replayer {
     };
 
     const startTime = Date.now();
-    while (queue.length) {
-      // transform queue to resolve tree
-      const resolveTrees = queueToResolveTrees(queue);
-      queue.length = 0;
+    while (legacy_queue.length) {
+      // transform legacy_queue to resolve tree
+      const resolveTrees = queueToResolveTrees(legacy_queue);
+      legacy_queue.length = 0;
       if (Date.now() - startTime > 500) {
         this.warn(
           'Timeout in the loop, please check the resolve tree data:',
@@ -2013,7 +2022,8 @@ export class Replayer {
         if (Array.isArray(nestedIndex)) {
           const { positions, index } = getPositionsAndIndex(nestedIndex);
           const nestedRule = getNestedRule(styleSheet.cssRules, positions);
-          nestedRule.insertRule(rule, index);
+          // Null check: parent rule may not exist due to timing/ordering issues
+          nestedRule?.insertRule(rule, index);
         } else {
           const index =
             nestedIndex === undefined
@@ -2038,7 +2048,8 @@ export class Replayer {
         if (Array.isArray(nestedIndex)) {
           const { positions, index } = getPositionsAndIndex(nestedIndex);
           const nestedRule = getNestedRule(styleSheet.cssRules, positions);
-          nestedRule.deleteRule(index || 0);
+          // Null check: parent rule may not exist due to timing/ordering issues
+          nestedRule?.deleteRule(index || 0);
         } else {
           styleSheet?.deleteRule(nestedIndex);
         }
@@ -2049,14 +2060,14 @@ export class Replayer {
       }
     });
 
-    if (data.replace)
+    if (typeof data.replace === 'string')
       try {
         void styleSheet.replace?.(data.replace);
       } catch (e) {
         // for safety
       }
 
-    if (data.replaceSync)
+    if (typeof data.replaceSync === 'string')
       try {
         styleSheet.replaceSync?.(data.replaceSync);
       } catch (e) {
@@ -2064,6 +2075,17 @@ export class Replayer {
       }
   }
 
+  /**
+   * Apply a StyleDeclaration event (setProperty/removeProperty) to a stylesheet.
+   *
+   * Uses defensive null checks because the rule may not exist:
+   * - Timing issues: The rule was added by a previous StyleSheetRule event
+   *   that hasn't been processed yet
+   * - Dynamic stylesheets: Constructed stylesheets or adopted stylesheets
+   *   may not be fully synchronized
+   * - Nested rules: Rules inside @media/@supports require the parent rule
+   *   to exist first
+   */
   private applyStyleDeclaration(
     data: styleDeclarationData,
     styleSheet: CSSStyleSheet,
@@ -2073,12 +2095,14 @@ export class Replayer {
         styleSheet.rules,
         data.index,
       ) as unknown as CSSStyleRule;
-      if (!rule?.style) return;
-      rule.style.setProperty(
-        data.set.property,
-        data.set.value,
-        data.set.priority,
-      );
+      // Null check: rule may not exist due to timing/ordering issues
+      if (rule?.style) {
+        rule.style.setProperty(
+          data.set.property,
+          data.set.value,
+          data.set.priority,
+        );
+      }
     }
 
     if (data.remove) {
@@ -2086,8 +2110,10 @@ export class Replayer {
         styleSheet.rules,
         data.index,
       ) as unknown as CSSStyleRule;
-      if (!rule?.style) return;
-      rule.style.removeProperty(data.remove.property);
+      // Null check: rule may not exist due to timing/ordering issues
+      if (rule?.style) {
+        rule.style.removeProperty(data.remove.property);
+      }
     }
   }
 

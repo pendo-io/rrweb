@@ -3294,6 +3294,981 @@ exports[`record integration tests > can record form interactions 1`] = `
 ]"
 `;
 
+exports[`record integration tests > can record node mutations 1`] = `
+"[
+  {
+    \\"type\\": 0,
+    \\"data\\": {}
+  },
+  {
+    \\"type\\": 1,
+    \\"data\\": {}
+  },
+  {
+    \\"type\\": 4,
+    \\"data\\": {
+      \\"href\\": \\"about:blank\\",
+      \\"width\\": 1920,
+      \\"height\\": 1080
+    }
+  },
+  {
+    \\"type\\": 2,
+    \\"data\\": {
+      \\"node\\": {
+        \\"type\\": 0,
+        \\"childNodes\\": [
+          {
+            \\"type\\": 1,
+            \\"name\\": \\"html\\",
+            \\"publicId\\": \\"\\",
+            \\"systemId\\": \\"\\",
+            \\"id\\": 2
+          },
+          {
+            \\"type\\": 2,
+            \\"tagName\\": \\"html\\",
+            \\"attributes\\": {
+              \\"lang\\": \\"en\\"
+            },
+            \\"childNodes\\": [
+              {
+                \\"type\\": 2,
+                \\"tagName\\": \\"head\\",
+                \\"attributes\\": {},
+                \\"childNodes\\": [
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 5
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"meta\\",
+                    \\"attributes\\": {
+                      \\"charset\\": \\"UTF-8\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 6
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 7
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"meta\\",
+                    \\"attributes\\": {
+                      \\"name\\": \\"viewport\\",
+                      \\"content\\": \\"width=device-width, initial-scale=1.0\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 8
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 9
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"meta\\",
+                    \\"attributes\\": {
+                      \\"http-equiv\\": \\"X-UA-Compatible\\",
+                      \\"content\\": \\"ie=edge\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 10
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 11
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"title\\",
+                    \\"attributes\\": {},
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"Select2 3.5\\",
+                        \\"id\\": 13
+                      }
+                    ],
+                    \\"id\\": 12
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 14
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"link\\",
+                    \\"attributes\\": {
+                      \\"rel\\": \\"stylesheet\\",
+                      \\"href\\": \\"https://cdn.jsdelivr.net/npm/select2@3.5.1/select2.css\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 15
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n\\",
+                    \\"id\\": 16
+                  }
+                ],
+                \\"id\\": 4
+              },
+              {
+                \\"type\\": 3,
+                \\"textContent\\": \\"\\\\n\\",
+                \\"id\\": 17
+              },
+              {
+                \\"type\\": 2,
+                \\"tagName\\": \\"body\\",
+                \\"attributes\\": {},
+                \\"childNodes\\": [
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 19
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"blockquote\\",
+                    \\"attributes\\": {},
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"\\\\n    Select2 is a jQuery replacement for select boxes.\\\\n    \\",
+                        \\"id\\": 21
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"br\\",
+                        \\"attributes\\": {},
+                        \\"childNodes\\": [],
+                        \\"id\\": 22
+                      },
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"\\\\n    In the 3.5 version it use a quite complicated DOM generation strategy which is a good battle-test for rrweb's recorder.\\\\n  \\",
+                        \\"id\\": 23
+                      }
+                    ],
+                    \\"id\\": 20
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 24
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"div\\",
+                    \\"attributes\\": {
+                      \\"class\\": \\"select2-container\\",
+                      \\"id\\": \\"s2id_el\\"
+                    },
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"a\\",
+                        \\"attributes\\": {
+                          \\"href\\": \\"javascript:void(0)\\",
+                          \\"class\\": \\"select2-choice\\",
+                          \\"tabindex\\": \\"-1\\"
+                        },
+                        \\"childNodes\\": [
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"   \\",
+                            \\"id\\": 27
+                          },
+                          {
+                            \\"type\\": 2,
+                            \\"tagName\\": \\"span\\",
+                            \\"attributes\\": {
+                              \\"class\\": \\"select2-chosen\\",
+                              \\"id\\": \\"select2-chosen-1\\"
+                            },
+                            \\"childNodes\\": [
+                              {
+                                \\"type\\": 3,
+                                \\"textContent\\": \\"A\\",
+                                \\"id\\": 29
+                              }
+                            ],
+                            \\"id\\": 28
+                          },
+                          {
+                            \\"type\\": 2,
+                            \\"tagName\\": \\"abbr\\",
+                            \\"attributes\\": {
+                              \\"class\\": \\"select2-search-choice-close\\"
+                            },
+                            \\"childNodes\\": [],
+                            \\"id\\": 30
+                          },
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"   \\",
+                            \\"id\\": 31
+                          },
+                          {
+                            \\"type\\": 2,
+                            \\"tagName\\": \\"span\\",
+                            \\"attributes\\": {
+                              \\"class\\": \\"select2-arrow\\",
+                              \\"role\\": \\"presentation\\"
+                            },
+                            \\"childNodes\\": [
+                              {
+                                \\"type\\": 2,
+                                \\"tagName\\": \\"b\\",
+                                \\"attributes\\": {
+                                  \\"role\\": \\"presentation\\"
+                                },
+                                \\"childNodes\\": [],
+                                \\"id\\": 33
+                              }
+                            ],
+                            \\"id\\": 32
+                          }
+                        ],
+                        \\"id\\": 26
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"label\\",
+                        \\"attributes\\": {
+                          \\"for\\": \\"s2id_autogen1\\",
+                          \\"class\\": \\"select2-offscreen\\"
+                        },
+                        \\"childNodes\\": [],
+                        \\"id\\": 34
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"input\\",
+                        \\"attributes\\": {
+                          \\"class\\": \\"select2-focusser select2-offscreen\\",
+                          \\"type\\": \\"text\\",
+                          \\"aria-haspopup\\": \\"true\\",
+                          \\"role\\": \\"button\\",
+                          \\"aria-labelledby\\": \\"select2-chosen-1\\",
+                          \\"id\\": \\"s2id_autogen1\\"
+                        },
+                        \\"childNodes\\": [],
+                        \\"id\\": 35
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"div\\",
+                        \\"attributes\\": {
+                          \\"class\\": \\"select2-drop select2-display-none select2-with-searchbox\\"
+                        },
+                        \\"childNodes\\": [
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"   \\",
+                            \\"id\\": 37
+                          },
+                          {
+                            \\"type\\": 2,
+                            \\"tagName\\": \\"div\\",
+                            \\"attributes\\": {
+                              \\"class\\": \\"select2-search\\"
+                            },
+                            \\"childNodes\\": [
+                              {
+                                \\"type\\": 3,
+                                \\"textContent\\": \\"       \\",
+                                \\"id\\": 39
+                              },
+                              {
+                                \\"type\\": 2,
+                                \\"tagName\\": \\"label\\",
+                                \\"attributes\\": {
+                                  \\"for\\": \\"s2id_autogen1_search\\",
+                                  \\"class\\": \\"select2-offscreen\\"
+                                },
+                                \\"childNodes\\": [],
+                                \\"id\\": 40
+                              },
+                              {
+                                \\"type\\": 3,
+                                \\"textContent\\": \\"       \\",
+                                \\"id\\": 41
+                              },
+                              {
+                                \\"type\\": 2,
+                                \\"tagName\\": \\"input\\",
+                                \\"attributes\\": {
+                                  \\"type\\": \\"text\\",
+                                  \\"autocomplete\\": \\"off\\",
+                                  \\"autocorrect\\": \\"off\\",
+                                  \\"autocapitalize\\": \\"off\\",
+                                  \\"spellcheck\\": \\"false\\",
+                                  \\"class\\": \\"select2-input\\",
+                                  \\"role\\": \\"combobox\\",
+                                  \\"aria-expanded\\": \\"true\\",
+                                  \\"aria-autocomplete\\": \\"list\\",
+                                  \\"aria-owns\\": \\"select2-results-1\\",
+                                  \\"id\\": \\"s2id_autogen1_search\\",
+                                  \\"placeholder\\": \\"\\"
+                                },
+                                \\"childNodes\\": [],
+                                \\"id\\": 42
+                              },
+                              {
+                                \\"type\\": 3,
+                                \\"textContent\\": \\"   \\",
+                                \\"id\\": 43
+                              }
+                            ],
+                            \\"id\\": 38
+                          },
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"   \\",
+                            \\"id\\": 44
+                          },
+                          {
+                            \\"type\\": 2,
+                            \\"tagName\\": \\"ul\\",
+                            \\"attributes\\": {
+                              \\"class\\": \\"select2-results\\",
+                              \\"role\\": \\"listbox\\",
+                              \\"id\\": \\"select2-results-1\\"
+                            },
+                            \\"childNodes\\": [
+                              {
+                                \\"type\\": 3,
+                                \\"textContent\\": \\"   \\",
+                                \\"id\\": 46
+                              }
+                            ],
+                            \\"id\\": 45
+                          }
+                        ],
+                        \\"id\\": 36
+                      }
+                    ],
+                    \\"id\\": 25
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"select\\",
+                    \\"attributes\\": {
+                      \\"id\\": \\"el\\",
+                      \\"tabindex\\": \\"-1\\",
+                      \\"title\\": \\"\\",
+                      \\"style\\": \\"display: none;\\",
+                      \\"value\\": \\"a\\"
+                    },
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"\\\\n    \\",
+                        \\"id\\": 48
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"option\\",
+                        \\"attributes\\": {
+                          \\"value\\": \\"a\\",
+                          \\"selected\\": true
+                        },
+                        \\"childNodes\\": [
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"A\\",
+                            \\"id\\": 50
+                          }
+                        ],
+                        \\"id\\": 49
+                      },
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"\\\\n    \\",
+                        \\"id\\": 51
+                      },
+                      {
+                        \\"type\\": 2,
+                        \\"tagName\\": \\"option\\",
+                        \\"attributes\\": {
+                          \\"value\\": \\"b\\"
+                        },
+                        \\"childNodes\\": [
+                          {
+                            \\"type\\": 3,
+                            \\"textContent\\": \\"B\\",
+                            \\"id\\": 53
+                          }
+                        ],
+                        \\"id\\": 52
+                      },
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"\\\\n  \\",
+                        \\"id\\": 54
+                      }
+                    ],
+                    \\"id\\": 47
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 55
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"script\\",
+                    \\"attributes\\": {
+                      \\"src\\": \\"https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 56
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 57
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"script\\",
+                    \\"attributes\\": {
+                      \\"src\\": \\"https://cdn.jsdelivr.net/npm/select2@3.5.2-browserify/select2.min.js\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 58
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n  \\",
+                    \\"id\\": 59
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"script\\",
+                    \\"attributes\\": {},
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"SCRIPT_PLACEHOLDER\\",
+                        \\"id\\": 61
+                      }
+                    ],
+                    \\"id\\": 60
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"span\\",
+                    \\"attributes\\": {
+                      \\"role\\": \\"status\\",
+                      \\"aria-live\\": \\"polite\\",
+                      \\"class\\": \\"select2-hidden-accessible\\"
+                    },
+                    \\"childNodes\\": [],
+                    \\"id\\": 62
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n\\\\n    \\",
+                    \\"id\\": 63
+                  },
+                  {
+                    \\"type\\": 2,
+                    \\"tagName\\": \\"script\\",
+                    \\"attributes\\": {},
+                    \\"childNodes\\": [
+                      {
+                        \\"type\\": 3,
+                        \\"textContent\\": \\"SCRIPT_PLACEHOLDER\\",
+                        \\"id\\": 65
+                      }
+                    ],
+                    \\"id\\": 64
+                  },
+                  {
+                    \\"type\\": 3,
+                    \\"textContent\\": \\"\\\\n    \\\\n    \\\\n\\",
+                    \\"id\\": 66
+                  }
+                ],
+                \\"id\\": 18
+              }
+            ],
+            \\"id\\": 3
+          }
+        ],
+        \\"id\\": 1
+      },
+      \\"initialOffset\\": {
+        \\"left\\": 0,
+        \\"top\\": 0
+      }
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 2,
+      \\"type\\": 1,
+      \\"id\\": 26
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 2,
+      \\"type\\": 5,
+      \\"id\\": 42
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 0,
+      \\"texts\\": [],
+      \\"attributes\\": [
+        {
+          \\"id\\": 25,
+          \\"attributes\\": {
+            \\"class\\": \\"select2-container select2-dropdown-open select2-container-active\\"
+          }
+        },
+        {
+          \\"id\\": 35,
+          \\"attributes\\": {
+            \\"disabled\\": \\"\\"
+          }
+        }
+      ],
+      \\"removes\\": [
+        {
+          \\"parentId\\": 25,
+          \\"id\\": 26
+        },
+        {
+          \\"parentId\\": 25,
+          \\"id\\": 36
+        },
+        {
+          \\"parentId\\": 45,
+          \\"id\\": 46
+        }
+      ],
+      \\"adds\\": [
+        {
+          \\"parentId\\": 18,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"div\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-drop select2-display-none select2-with-searchbox select2-drop-active\\",
+              \\"id\\": \\"select2-drop\\",
+              \\"style\\": \\"left: Npx; width: Npx; top: Npx; bottom: auto; display: block;\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 36
+          }
+        },
+        {
+          \\"parentId\\": 18,
+          \\"nextId\\": 36,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"div\\",
+            \\"attributes\\": {
+              \\"id\\": \\"select2-drop-mask\\",
+              \\"class\\": \\"select2-drop-mask\\",
+              \\"style\\": \\"\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 67
+          }
+        },
+        {
+          \\"parentId\\": 36,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"ul\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-results\\",
+              \\"role\\": \\"listbox\\",
+              \\"id\\": \\"select2-results-1\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 45
+          }
+        },
+        {
+          \\"parentId\\": 36,
+          \\"nextId\\": 45,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"   \\",
+            \\"id\\": 44
+          }
+        },
+        {
+          \\"parentId\\": 36,
+          \\"nextId\\": 44,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"div\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-search\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 38
+          }
+        },
+        {
+          \\"parentId\\": 36,
+          \\"nextId\\": 38,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"   \\",
+            \\"id\\": 37
+          }
+        },
+        {
+          \\"parentId\\": 45,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"li\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-results-dept-0 select2-result select2-result-selectable\\",
+              \\"role\\": \\"presentation\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 68
+          }
+        },
+        {
+          \\"parentId\\": 45,
+          \\"nextId\\": 68,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"li\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-results-dept-0 select2-result select2-result-selectable select2-highlighted\\",
+              \\"role\\": \\"presentation\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 69
+          }
+        },
+        {
+          \\"parentId\\": 69,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"div\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-result-label\\",
+              \\"id\\": \\"select2-result-label-2\\",
+              \\"role\\": \\"option\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 70
+          }
+        },
+        {
+          \\"parentId\\": 70,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"A\\",
+            \\"id\\": 71
+          }
+        },
+        {
+          \\"parentId\\": 70,
+          \\"nextId\\": 71,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"span\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-match\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 72
+          }
+        },
+        {
+          \\"parentId\\": 68,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"div\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-result-label\\",
+              \\"id\\": \\"select2-result-label-3\\",
+              \\"role\\": \\"option\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 73
+          }
+        },
+        {
+          \\"parentId\\": 73,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"B\\",
+            \\"id\\": 74
+          }
+        },
+        {
+          \\"parentId\\": 73,
+          \\"nextId\\": 74,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"span\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-match\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 75
+          }
+        },
+        {
+          \\"parentId\\": 62,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"2 results are available, use up and down arrow keys to navigate.\\",
+            \\"id\\": 76
+          }
+        },
+        {
+          \\"parentId\\": 25,
+          \\"nextId\\": 34,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"a\\",
+            \\"attributes\\": {
+              \\"href\\": \\"javascript:void(0)\\",
+              \\"class\\": \\"select2-choice\\",
+              \\"tabindex\\": \\"-1\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 26
+          }
+        },
+        {
+          \\"parentId\\": 26,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"span\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-arrow\\",
+              \\"role\\": \\"presentation\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 32
+          }
+        },
+        {
+          \\"parentId\\": 26,
+          \\"nextId\\": 32,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"   \\",
+            \\"id\\": 31
+          }
+        },
+        {
+          \\"parentId\\": 26,
+          \\"nextId\\": 31,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"abbr\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-search-choice-close\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 30
+          }
+        },
+        {
+          \\"parentId\\": 26,
+          \\"nextId\\": 30,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"span\\",
+            \\"attributes\\": {
+              \\"class\\": \\"select2-chosen\\",
+              \\"id\\": \\"select2-chosen-1\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 28
+          }
+        },
+        {
+          \\"parentId\\": 26,
+          \\"nextId\\": 28,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"   \\",
+            \\"id\\": 27
+          }
+        },
+        {
+          \\"parentId\\": 28,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"A\\",
+            \\"id\\": 29
+          }
+        },
+        {
+          \\"parentId\\": 32,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"b\\",
+            \\"attributes\\": {
+              \\"role\\": \\"presentation\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 33
+          }
+        },
+        {
+          \\"parentId\\": 38,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"   \\",
+            \\"id\\": 43
+          }
+        },
+        {
+          \\"parentId\\": 38,
+          \\"nextId\\": 43,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"input\\",
+            \\"attributes\\": {
+              \\"type\\": \\"text\\",
+              \\"autocomplete\\": \\"off\\",
+              \\"autocorrect\\": \\"off\\",
+              \\"autocapitalize\\": \\"off\\",
+              \\"spellcheck\\": \\"false\\",
+              \\"class\\": \\"select2-input select2-focused\\",
+              \\"role\\": \\"combobox\\",
+              \\"aria-expanded\\": \\"true\\",
+              \\"aria-autocomplete\\": \\"list\\",
+              \\"aria-owns\\": \\"select2-results-1\\",
+              \\"id\\": \\"s2id_autogen1_search\\",
+              \\"placeholder\\": \\"\\",
+              \\"aria-activedescendant\\": \\"select2-result-label-2\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 42
+          }
+        },
+        {
+          \\"parentId\\": 38,
+          \\"nextId\\": 42,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"       \\",
+            \\"id\\": 41
+          }
+        },
+        {
+          \\"parentId\\": 38,
+          \\"nextId\\": 41,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"label\\",
+            \\"attributes\\": {
+              \\"for\\": \\"s2id_autogen1_search\\",
+              \\"class\\": \\"select2-offscreen\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 40
+          }
+        },
+        {
+          \\"parentId\\": 38,
+          \\"nextId\\": 40,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"       \\",
+            \\"id\\": 39
+          }
+        }
+      ]
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 5,
+      \\"text\\": \\"\\",
+      \\"isChecked\\": false,
+      \\"id\\": 42
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 5,
+      \\"text\\": \\"\\",
+      \\"isChecked\\": false,
+      \\"id\\": 35
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 2,
+      \\"type\\": 0,
+      \\"id\\": 67
+    }
+  },
+  {
+    \\"type\\": 3,
+    \\"data\\": {
+      \\"source\\": 0,
+      \\"texts\\": [],
+      \\"attributes\\": [
+        {
+          \\"id\\": 36,
+          \\"attributes\\": {
+            \\"style\\": {
+              \\"color\\": [
+                \\"black\\",
+                \\"important\\"
+              ]
+            }
+          }
+        }
+      ],
+      \\"removes\\": [],
+      \\"adds\\": []
+    }
+  }
+]"
+`;
+
 exports[`record integration tests > can record style changes compactly and preserve css var() functions 1`] = `
 "[
   {
@@ -5968,11 +6943,11 @@ exports[`record integration tests > mutations should work when blocked class is 
           }
         },
         {
-          \\"parentId\\": 76,
-          \\"nextId\\": null,
+          \\"parentId\\": 75,
+          \\"nextId\\": 76,
           \\"node\\": {
             \\"type\\": 2,
-            \\"tagName\\": \\"button\\",
+            \\"tagName\\": \\"div\\",
             \\"attributes\\": {},
             \\"childNodes\\": [],
             \\"id\\": 77
@@ -5982,24 +6957,24 @@ exports[`record integration tests > mutations should work when blocked class is 
           \\"parentId\\": 77,
           \\"nextId\\": null,
           \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"I1I2 VISIBLE\\",
+            \\"type\\": 2,
+            \\"tagName\\": \\"button\\",
+            \\"attributes\\": {},
+            \\"childNodes\\": [],
             \\"id\\": 78
           }
         },
         {
-          \\"parentId\\": 75,
-          \\"nextId\\": 76,
+          \\"parentId\\": 78,
+          \\"nextId\\": null,
           \\"node\\": {
-            \\"type\\": 2,
-            \\"tagName\\": \\"div\\",
-            \\"attributes\\": {},
-            \\"childNodes\\": [],
+            \\"type\\": 3,
+            \\"textContent\\": \\"I1I1 VISIBLE\\",
             \\"id\\": 79
           }
         },
         {
-          \\"parentId\\": 79,
+          \\"parentId\\": 76,
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 2,
@@ -6014,7 +6989,7 @@ exports[`record integration tests > mutations should work when blocked class is 
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 3,
-            \\"textContent\\": \\"I1I1 VISIBLE\\",
+            \\"textContent\\": \\"I1I2 VISIBLE\\",
             \\"id\\": 81
           }
         }
@@ -6100,11 +7075,11 @@ exports[`record integration tests > mutations should work when blocked class is 
           }
         },
         {
-          \\"parentId\\": 83,
-          \\"nextId\\": null,
+          \\"parentId\\": 82,
+          \\"nextId\\": 83,
           \\"node\\": {
             \\"type\\": 2,
-            \\"tagName\\": \\"button\\",
+            \\"tagName\\": \\"div\\",
             \\"attributes\\": {},
             \\"childNodes\\": [],
             \\"id\\": 84
@@ -6114,24 +7089,24 @@ exports[`record integration tests > mutations should work when blocked class is 
           \\"parentId\\": 84,
           \\"nextId\\": null,
           \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"I1I2 VISIBLE\\",
+            \\"type\\": 2,
+            \\"tagName\\": \\"button\\",
+            \\"attributes\\": {},
+            \\"childNodes\\": [],
             \\"id\\": 85
           }
         },
         {
-          \\"parentId\\": 82,
-          \\"nextId\\": 83,
+          \\"parentId\\": 85,
+          \\"nextId\\": null,
           \\"node\\": {
-            \\"type\\": 2,
-            \\"tagName\\": \\"div\\",
-            \\"attributes\\": {},
-            \\"childNodes\\": [],
+            \\"type\\": 3,
+            \\"textContent\\": \\"I1I1 VISIBLE\\",
             \\"id\\": 86
           }
         },
         {
-          \\"parentId\\": 86,
+          \\"parentId\\": 83,
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 2,
@@ -6146,7 +7121,7 @@ exports[`record integration tests > mutations should work when blocked class is 
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 3,
-            \\"textContent\\": \\"I1I1 VISIBLE\\",
+            \\"textContent\\": \\"I1I2 VISIBLE\\",
             \\"id\\": 88
           }
         }
@@ -11411,11 +12386,11 @@ exports[`record integration tests > should record DOM node movement 1 1`] = `
         },
         {
           \\"parentId\\": 12,
-          \\"nextId\\": 14,
+          \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n      \\",
-            \\"id\\": 13
+            \\"textContent\\": \\"\\\\n    \\",
+            \\"id\\": 19
           }
         },
         {
@@ -11430,12 +12405,21 @@ exports[`record integration tests > should record DOM node movement 1 1`] = `
           }
         },
         {
-          \\"parentId\\": 14,
-          \\"nextId\\": 16,
+          \\"parentId\\": 12,
+          \\"nextId\\": 14,
           \\"node\\": {
             \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n        \\",
-            \\"id\\": 15
+            \\"textContent\\": \\"\\\\n      \\",
+            \\"id\\": 13
+          }
+        },
+        {
+          \\"parentId\\": 14,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n      \\",
+            \\"id\\": 18
           }
         },
         {
@@ -11450,30 +12434,21 @@ exports[`record integration tests > should record DOM node movement 1 1`] = `
           }
         },
         {
+          \\"parentId\\": 14,
+          \\"nextId\\": 16,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n        \\",
+            \\"id\\": 15
+          }
+        },
+        {
           \\"parentId\\": 16,
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 3,
             \\"textContent\\": \\"1\\",
             \\"id\\": 17
-          }
-        },
-        {
-          \\"parentId\\": 14,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n      \\",
-            \\"id\\": 18
-          }
-        },
-        {
-          \\"parentId\\": 12,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n    \\",
-            \\"id\\": 19
           }
         }
       ]
@@ -11666,73 +12641,6 @@ exports[`record integration tests > should record DOM node movement 2 1`] = `
       ],
       \\"adds\\": [
         {
-          \\"parentId\\": 12,
-          \\"nextId\\": 14,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n      \\",
-            \\"id\\": 13
-          }
-        },
-        {
-          \\"parentId\\": 12,
-          \\"nextId\\": 19,
-          \\"node\\": {
-            \\"type\\": 2,
-            \\"tagName\\": \\"i\\",
-            \\"attributes\\": {},
-            \\"childNodes\\": [],
-            \\"id\\": 14
-          }
-        },
-        {
-          \\"parentId\\": 14,
-          \\"nextId\\": 16,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n        \\",
-            \\"id\\": 15
-          }
-        },
-        {
-          \\"parentId\\": 14,
-          \\"nextId\\": 18,
-          \\"node\\": {
-            \\"type\\": 2,
-            \\"tagName\\": \\"b\\",
-            \\"attributes\\": {},
-            \\"childNodes\\": [],
-            \\"id\\": 16
-          }
-        },
-        {
-          \\"parentId\\": 16,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"1\\",
-            \\"id\\": 17
-          }
-        },
-        {
-          \\"parentId\\": 14,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n      \\",
-            \\"id\\": 18
-          }
-        },
-        {
-          \\"parentId\\": 12,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 3,
-            \\"textContent\\": \\"\\\\n    \\",
-            \\"id\\": 19
-          }
-        },
-        {
           \\"parentId\\": 5,
           \\"nextId\\": null,
           \\"node\\": {
@@ -11752,6 +12660,73 @@ exports[`record integration tests > should record DOM node movement 2 1`] = `
             \\"attributes\\": {},
             \\"childNodes\\": [],
             \\"id\\": 12
+          }
+        },
+        {
+          \\"parentId\\": 12,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n    \\",
+            \\"id\\": 19
+          }
+        },
+        {
+          \\"parentId\\": 12,
+          \\"nextId\\": 19,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"i\\",
+            \\"attributes\\": {},
+            \\"childNodes\\": [],
+            \\"id\\": 14
+          }
+        },
+        {
+          \\"parentId\\": 12,
+          \\"nextId\\": 14,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n      \\",
+            \\"id\\": 13
+          }
+        },
+        {
+          \\"parentId\\": 14,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n      \\",
+            \\"id\\": 18
+          }
+        },
+        {
+          \\"parentId\\": 14,
+          \\"nextId\\": 18,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"b\\",
+            \\"attributes\\": {},
+            \\"childNodes\\": [],
+            \\"id\\": 16
+          }
+        },
+        {
+          \\"parentId\\": 14,
+          \\"nextId\\": 16,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"\\\\n        \\",
+            \\"id\\": 15
+          }
+        },
+        {
+          \\"parentId\\": 16,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 3,
+            \\"textContent\\": \\"1\\",
+            \\"id\\": 17
           }
         }
       ]
@@ -14404,7 +15379,9 @@ exports[`record integration tests > should record moved shadow DOM 1`] = `
           \\"node\\": {
             \\"type\\": 2,
             \\"tagName\\": \\"div\\",
-            \\"attributes\\": {},
+            \\"attributes\\": {
+              \\"id\\": \\"shadowHost\\"
+            },
             \\"childNodes\\": [],
             \\"id\\": 9,
             \\"isShadowHost\\": true
@@ -14416,7 +15393,9 @@ exports[`record integration tests > should record moved shadow DOM 1`] = `
           \\"node\\": {
             \\"type\\": 2,
             \\"tagName\\": \\"input\\",
-            \\"attributes\\": {},
+            \\"attributes\\": {
+              \\"id\\": \\"shadowContent\\"
+            },
             \\"childNodes\\": [],
             \\"id\\": 10,
             \\"isShadow\\": true
@@ -14439,24 +15418,14 @@ exports[`record integration tests > should record moved shadow DOM 1`] = `
       ],
       \\"adds\\": [
         {
-          \\"parentId\\": 9,
-          \\"nextId\\": null,
-          \\"node\\": {
-            \\"type\\": 2,
-            \\"tagName\\": \\"input\\",
-            \\"attributes\\": {},
-            \\"childNodes\\": [],
-            \\"id\\": 10,
-            \\"isShadow\\": true
-          }
-        },
-        {
           \\"parentId\\": 4,
           \\"nextId\\": null,
           \\"node\\": {
             \\"type\\": 2,
             \\"tagName\\": \\"div\\",
-            \\"attributes\\": {},
+            \\"attributes\\": {
+              \\"id\\": \\"newParent\\"
+            },
             \\"childNodes\\": [],
             \\"id\\": 11
           }
@@ -14467,10 +15436,26 @@ exports[`record integration tests > should record moved shadow DOM 1`] = `
           \\"node\\": {
             \\"type\\": 2,
             \\"tagName\\": \\"div\\",
-            \\"attributes\\": {},
+            \\"attributes\\": {
+              \\"id\\": \\"shadowHost\\"
+            },
             \\"childNodes\\": [],
             \\"id\\": 9,
             \\"isShadowHost\\": true
+          }
+        },
+        {
+          \\"parentId\\": 9,
+          \\"nextId\\": null,
+          \\"node\\": {
+            \\"type\\": 2,
+            \\"tagName\\": \\"input\\",
+            \\"attributes\\": {
+              \\"id\\": \\"shadowContent\\"
+            },
+            \\"childNodes\\": [],
+            \\"id\\": 10,
+            \\"isShadow\\": true
           }
         }
       ]
