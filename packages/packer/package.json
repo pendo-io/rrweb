@@ -75,13 +75,13 @@
     "package.json"
   ],
   "devDependencies": {
-    "vite": "^6.0.1",
+    "vite": "^8.0.16",
     "vite-plugin-dts": "^3.9.1",
-    "vitest": "^1.6.1",
+    "vitest": "^4.1.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "fflate": "^0.4.4",
+    "fflate": "^0.4.9",
     "@rrweb/types": "^2.1.6"
   },
   "browserslist": [
