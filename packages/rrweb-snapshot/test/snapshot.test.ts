@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import snapshot, {
   _isBlockedElement,
+  ignoreAttribute,
   serializeNodeWithId,
 } from '../src/snapshot';
 import { elementNode, serializedNodeWithId } from '@rrweb/types';
@@ -46,6 +47,12 @@ describe('absolute url to stylesheet', () => {
   it('can handle parent level path', () => {
     expect(absolutifyURLs('url("../a.jpg")', href)).toEqual(
       `url("http://localhost/a.jpg")`,
+    );
+  });
+
+  it('can handle hashes', () => {
+    expect(absolutifyURLs('url("../a.jpg#c/d")', href + '#e/f')).toEqual(
+      `url("http://localhost/a.jpg#c/d")`,
     );
   });
 
@@ -240,6 +247,23 @@ describe('hideSelector', () => {
     expect(result).toBeTruthy();
     expect((result as any).attributes.rr_display).toBe('none');
     expect((result as any).attributes.class).toBeUndefined();
+  });
+});
+
+describe('ignoreAttribute()', () => {
+  it('ignores autoplay on lowercase media tag names', () => {
+    expect(ignoreAttribute('video', 'autoplay', '')).toEqual(true);
+    expect(ignoreAttribute('audio', 'autoplay', '')).toEqual(true);
+  });
+
+  it('ignores autoplay regardless of attribute-name case', () => {
+    expect(ignoreAttribute('video', 'AUTOPLAY', '')).toEqual(true);
+    expect(ignoreAttribute('audio', 'AutoPlay', '')).toEqual(true);
+  });
+
+  it('does not ignore other attributes or other elements', () => {
+    expect(ignoreAttribute('video', 'src', '')).toEqual(false);
+    expect(ignoreAttribute('div', 'autoplay', '')).toEqual(false);
   });
 });
 
