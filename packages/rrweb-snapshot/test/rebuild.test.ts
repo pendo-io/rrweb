@@ -370,6 +370,70 @@ describe('rebuild', function () {
       expect(root.querySelector('iframe')).toBeNull();
     });
 
+    describe('createSandboxedIframe after the iframe is navigated', () => {
+      // jsdom cannot navigate an iframe, so simulate it: make `contentDocument`
+      // return the document of a second iframe, as it would after a navigation
+      // replaces the original about:blank document.
+      function setup() {
+        const root = document.createElement('div');
+        document.body.appendChild(root);
+        const restoreCreateElement = mockCreatedIframeSandboxDomApi();
+        const iframe = createSandboxedIframe({ root });
+
+        const navigated = document.createElement('iframe');
+        document.body.appendChild(navigated);
+        setIframeSandbox(navigated, 'allow-same-origin');
+        const navigatedDoc = navigated.contentDocument!;
+        Object.defineProperty(iframe, 'contentDocument', {
+          configurable: true,
+          get: () => navigatedDoc,
+        });
+
+        const rebuildIntoNavigatedDoc = () =>
+          rebuild(simpleSnapshot, { doc: navigatedDoc, cache, mirror });
+        const cleanup = () => {
+          restoreCreateElement();
+          navigated.remove();
+          root.remove();
+        };
+        return { iframe, rebuildIntoNavigatedDoc, cleanup };
+      }
+
+      it('rejects the replacement document until the iframe has loaded', () => {
+        const { rebuildIntoNavigatedDoc, cleanup } = setup();
+        try {
+          expect(rebuildIntoNavigatedDoc).toThrow(
+            'rrweb-snapshot.rebuild() cannot rebuild into an unprotected browser document',
+          );
+        } finally {
+          cleanup();
+        }
+      });
+
+      it('trusts the replacement document on load while the sandbox is intact', () => {
+        const { iframe, rebuildIntoNavigatedDoc, cleanup } = setup();
+        try {
+          iframe.dispatchEvent(new Event('load'));
+          expect(rebuildIntoNavigatedDoc).not.toThrow();
+        } finally {
+          cleanup();
+        }
+      });
+
+      it('does not trust the replacement document when the sandbox was widened', () => {
+        const { iframe, rebuildIntoNavigatedDoc, cleanup } = setup();
+        try {
+          setIframeSandbox(iframe, 'allow-same-origin allow-scripts');
+          iframe.dispatchEvent(new Event('load'));
+          expect(rebuildIntoNavigatedDoc).toThrow(
+            'rrweb-snapshot.rebuild() cannot rebuild into an unprotected browser document',
+          );
+        } finally {
+          cleanup();
+        }
+      });
+    });
+
     it('rebuildIntoSandboxedIframe rejects a detached root without appending an iframe', () => {
       const root = document.createElement('div');
 
