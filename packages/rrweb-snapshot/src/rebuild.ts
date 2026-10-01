@@ -785,6 +785,15 @@ export function createSandboxedIframe(
 
   sandboxedRebuildDocuments.add(doc);
 
+  // Navigating the iframe (e.g. to a service-worker scope) replaces
+  // contentDocument; re-trust it only while the sandbox is still locked down.
+  iframe.addEventListener('load', () => {
+    const loadedDoc = iframe.contentDocument;
+    if (loadedDoc && isSupportedSandboxedIframe(iframe)) {
+      sandboxedRebuildDocuments.add(loadedDoc);
+    }
+  });
+
   return iframe;
 }
 
