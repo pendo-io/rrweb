@@ -61,7 +61,11 @@ export class IframeManager {
     if (iframeEl.contentWindow)
       this.crossOriginIframeMap.set(iframeEl.contentWindow, iframeEl);
 
-    if (!iframeEl.contentDocument && iframeEl.contentWindow)
+    if (
+      this.recordCrossOriginIframes &&
+      !iframeEl.contentDocument &&
+      iframeEl.contentWindow
+    )
       iframeEl.contentWindow.postMessage(
         {
           type: 'rrweb',
