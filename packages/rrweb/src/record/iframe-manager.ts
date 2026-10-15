@@ -1,6 +1,8 @@
 import type { Mirror } from 'rrweb-snapshot';
 import { genId } from 'rrweb-snapshot';
 import type { CrossOriginIframeMessageEvent } from '../types';
+import type { blockClass } from '@rrweb/types';
+import { isBlocked } from '../utils';
 import CrossOriginIframeMirror from './cross-origin-iframe-mirror';
 import { EventType, NodeType, IncrementalSource } from '@rrweb/types';
 import type {
@@ -27,12 +29,16 @@ export class IframeManager {
   private pageHideListener?: (iframeEl: HTMLIFrameElement) => unknown;
   private stylesheetManager: StylesheetManager;
   private recordCrossOriginIframes: boolean;
+  private blockClass: blockClass;
+  private blockSelector: string | null;
 
   constructor(options: {
     mirror: Mirror;
     mutationCb: mutationCallBack;
     stylesheetManager: StylesheetManager;
     recordCrossOriginIframes: boolean;
+    blockClass: blockClass;
+    blockSelector: string | null;
     wrappedEmit: (e: eventWithoutTime, isCheckout?: boolean) => void;
     takeFullSnapshot: (isCheckout?: boolean) => void;
   }) {
@@ -41,6 +47,8 @@ export class IframeManager {
     this.takeFullSnapshot = options.takeFullSnapshot;
     this.stylesheetManager = options.stylesheetManager;
     this.recordCrossOriginIframes = options.recordCrossOriginIframes;
+    this.blockClass = options.blockClass;
+    this.blockSelector = options.blockSelector;
     this.crossOriginIframeStyleMirror = new CrossOriginIframeMirror(
       this.stylesheetManager.styleMirror.generateId.bind(
         this.stylesheetManager.styleMirror,
@@ -57,6 +65,7 @@ export class IframeManager {
   }
 
   public addIframe(iframeEl: HTMLIFrameElement) {
+    if (isBlocked(iframeEl, this.blockClass, this.blockSelector, false)) return;
     this.iframes.set(iframeEl, true);
     if (iframeEl.contentWindow)
       this.crossOriginIframeMap.set(iframeEl.contentWindow, iframeEl);

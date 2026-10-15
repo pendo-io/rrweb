@@ -288,6 +288,8 @@ function record<T = eventWithTime>(
     mutationCb: wrappedMutationEmit,
     stylesheetManager: stylesheetManager,
     recordCrossOriginIframes,
+    blockClass,
+    blockSelector,
     wrappedEmit,
     takeFullSnapshot,
   });

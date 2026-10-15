@@ -15,6 +15,8 @@ const createManager = (recordCrossOriginIframes: boolean) =>
       adoptedStyleSheetCb: vi.fn(),
     }),
     recordCrossOriginIframes,
+    blockClass: 'rr-block',
+    blockSelector: null,
     wrappedEmit: vi.fn(),
     takeFullSnapshot: vi.fn(),
   });
@@ -140,5 +142,37 @@ describe('IframeManager.addIframe snapshot request', () => {
 
       addEventListener.mockRestore();
     });
+  });
+});
+
+describe('IframeManager.addIframe with a blocked iframe', () => {
+  const blockedIframe = () => {
+    const postMessage = vi.fn();
+    const iframe = document.createElement('iframe');
+    iframe.className = 'rr-block';
+    document.body.appendChild(iframe);
+    // a real cross-origin iframe exposes contentWindow but hides contentDocument
+    Object.defineProperty(iframe, 'contentDocument', { value: null });
+    Object.defineProperty(iframe, 'contentWindow', {
+      value: { postMessage },
+    });
+    return { iframe, postMessage };
+  };
+
+  it('does not post a snapshot request to a blocked cross-origin iframe', () => {
+    const { iframe, postMessage } = blockedIframe();
+
+    createManager(true).addIframe(iframe);
+
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it('still posts to the same iframe when it is not blocked', () => {
+    const { iframe, postMessage } = blockedIframe();
+    iframe.className = '';
+
+    createManager(true).addIframe(iframe);
+
+    expect(postMessage).toHaveBeenCalledTimes(1);
   });
 });
