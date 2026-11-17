@@ -406,6 +406,28 @@ iframe.contentDocument.querySelector('center').clientHeight
     });
   });
 
+  it('does not record the srcdoc attribute of an iframe', async () => {
+    const page: puppeteer.Page = await browser.newPage();
+    await page.setContent(
+      '<iframe srcdoc="<p>secret srcdoc text</p>" width="100" height="50"></iframe>',
+    );
+    await page.waitForSelector('iframe', { timeout: 1000 });
+    await waitForRAF(page);
+    const snapshot = (await page.evaluate(`${code}
+      window.iframeDoc = null;
+      JSON.stringify(rrwebSnapshot.snapshot(document, {
+        onIframeLoad: function(iframe, node) {
+          window.iframeDoc = JSON.stringify(node);
+        }
+      }))`)) as string;
+    await waitForRAF(page);
+    expect(snapshot).not.toContain('srcdoc');
+    expect(snapshot).not.toContain('secret srcdoc text');
+    expect(await page.evaluate('window.iframeDoc')).toContain(
+      'secret srcdoc text',
+    );
+  });
+
   it('should save background-clip: text; as the more compatible -webkit-background-clip: test;', async () => {
     const page: puppeteer.Page = await browser.newPage();
     await page.goto(`${serverURL}/html/background-clip-text.html`, {

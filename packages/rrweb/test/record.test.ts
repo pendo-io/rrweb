@@ -9,6 +9,7 @@ import {
   eventWithTime,
   EventType,
   IncrementalSource,
+  mutationData,
   styleSheetRuleData,
   selectionData,
 } from '@rrweb/types';
@@ -1111,5 +1112,56 @@ describe('record iframes', function (this: ISuite) {
     expect(addRuleCount).toEqual(2);
     expect(removeRuleCount).toEqual(2);
     await assertSnapshot(ctx.events);
+  });
+
+  it('does not record the srcdoc attribute but still captures the document', async () => {
+    await ctx.page.evaluate(() => {
+      const { record } = (window as unknown as IWindow).rrweb;
+      record({
+        emit: (window as unknown as IWindow).emit,
+      });
+    });
+    await waitForRAF(ctx.page);
+
+    const fullSnapshot = ctx.events.find(
+      (e) => e.type === EventType.FullSnapshot,
+    );
+    expect(JSON.stringify(fullSnapshot)).not.toContain('srcdoc');
+    expect(JSON.stringify(fullSnapshot)).not.toContain('Mysterious Button');
+    const attachIframe = ctx.events.find(
+      (e) =>
+        e.type === EventType.IncrementalSnapshot &&
+        e.data.source === IncrementalSource.Mutation &&
+        (e.data as mutationData).isAttachIframe,
+    );
+    expect(JSON.stringify(attachIframe)).toContain('Mysterious Button');
+
+    const eventCount = ctx.events.length;
+    await ctx.page.evaluate(() => {
+      document
+        .querySelector('iframe')!
+        .setAttribute('srcdoc', '<button>Updated Button</button>');
+    });
+    await ctx.page.waitForTimeout(50);
+    await waitForRAF(ctx.page);
+
+    const laterEvents = ctx.events.slice(eventCount);
+    const attributeMutations = laterEvents
+      .filter(
+        (e) =>
+          e.type === EventType.IncrementalSnapshot &&
+          e.data.source === IncrementalSource.Mutation,
+      )
+      .flatMap((e) => (e.data as mutationData).attributes);
+    expect(
+      attributeMutations.some((mutation) => 'srcdoc' in mutation.attributes),
+    ).toBe(false);
+    const reattachIframe = laterEvents.find(
+      (e) =>
+        e.type === EventType.IncrementalSnapshot &&
+        e.data.source === IncrementalSource.Mutation &&
+        (e.data as mutationData).isAttachIframe,
+    );
+    expect(JSON.stringify(reattachIframe)).toContain('Updated Button');
   });
 });
