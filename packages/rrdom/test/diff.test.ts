@@ -1660,7 +1660,7 @@ describe('diff algorithm for rrdom', () => {
       const sn2 = Object.assign({}, elementSn, { id: 0 });
       rrDocument.mirror.add(rrNode, sn2);
 
-      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror);
+      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror, document);
       expect(result).toBeInstanceOf(HTMLElement);
       expect(mirror.getId(result)).toBe(0);
       expect((result as Node as HTMLElement).tagName).toBe('DIV');
@@ -1669,21 +1669,26 @@ describe('diff algorithm for rrdom', () => {
     it('create a node from RRNode', () => {
       const rrDocument = new RRDocument();
       rrDocument.mirror.add(rrDocument, getDefaultSN(rrDocument, 0));
-      let result = createOrGetNode(rrDocument, mirror, rrDocument.mirror);
+      let result = createOrGetNode(
+        rrDocument,
+        mirror,
+        rrDocument.mirror,
+        document,
+      );
       expect(result).toBeInstanceOf(Document);
       expect(mirror.getId(result)).toBe(0);
 
       const textContent = 'Text Content';
       let rrNode: RRNode = rrDocument.createTextNode(textContent);
       rrDocument.mirror.add(rrNode, getDefaultSN(rrNode, 1));
-      result = createOrGetNode(rrNode, mirror, rrDocument.mirror);
+      result = createOrGetNode(rrNode, mirror, rrDocument.mirror, document);
       expect(result).toBeInstanceOf(Text);
       expect(mirror.getId(result)).toBe(1);
       expect((result as Node as Text).textContent).toBe(textContent);
 
       rrNode = rrDocument.createComment(textContent);
       rrDocument.mirror.add(rrNode, getDefaultSN(rrNode, 2));
-      result = createOrGetNode(rrNode, mirror, rrDocument.mirror);
+      result = createOrGetNode(rrNode, mirror, rrDocument.mirror, document);
       expect(result).toBeInstanceOf(Comment);
       expect(mirror.getId(result)).toBe(2);
       expect((result as Node as Comment).textContent).toBe(textContent);
@@ -1691,7 +1696,7 @@ describe('diff algorithm for rrdom', () => {
       rrNode = rrDocument.createCDATASection('');
       rrDocument.mirror.add(rrNode, getDefaultSN(rrNode, 3));
       expect(() =>
-        createOrGetNode(rrNode, mirror, rrDocument.mirror),
+        createOrGetNode(rrNode, mirror, rrDocument.mirror, document),
       ).toThrowErrorMatchingInlineSnapshot(`DOMException {}`);
     });
 
@@ -1700,7 +1705,7 @@ describe('diff algorithm for rrdom', () => {
       const publicId = '-//W3C//DTD XHTML 1.0 Transitional//EN';
       let rrNode: RRNode = rrDocument.createDocumentType('html', publicId, '');
       rrDocument.mirror.add(rrNode, getDefaultSN(rrNode, 0));
-      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror);
+      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror, document);
       expect(result).toBeInstanceOf(DocumentType);
       expect(mirror.getId(result)).toBe(0);
       expect((result as Node as DocumentType).name).toEqual('html');
@@ -1721,7 +1726,7 @@ describe('diff algorithm for rrdom', () => {
       mirror.add(text, sn);
       const rrNode: RRNode = rrDocument.createTextNode(textContent);
       rrDocument.mirror.add(rrNode, getDefaultSN(rrNode, 0));
-      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror);
+      let result = createOrGetNode(rrNode, mirror, rrDocument.mirror, document);
 
       expect(result).toBeInstanceOf(Text);
       expect(mirror.getId(result)).toBe(0);
@@ -1729,6 +1734,61 @@ describe('diff algorithm for rrdom', () => {
       expect(result).toEqual(text);
       // To make sure the existed text node is used.
       expect(mirror.getMeta(result)).toEqual(mirror.getMeta(text));
+    });
+
+    it('creates nodes in the given document rather than the host document', () => {
+      const iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      const targetDoc = iframe.contentDocument!;
+      const rrDocument = new RRDocument();
+      const rrNode = rrDocument.createElement('img');
+      rrNode.setAttribute('onerror', 'alert(1)');
+      rrNode.setAttribute('src', 'x');
+      rrDocument.mirror.add(rrNode, { ...elementSn, tagName: 'img', id: 0 });
+
+      const result = createOrGetNode(
+        rrNode,
+        mirror,
+        rrDocument.mirror,
+        targetDoc,
+      ) as HTMLElement;
+      diff(result, rrNode, replayer, rrDocument.mirror);
+
+      expect(result.ownerDocument).toBe(targetDoc);
+      expect(result.ownerDocument).not.toBe(document);
+      expect(result.getAttribute('onerror')).toBe('alert(1)');
+    });
+  });
+
+  describe('target document of created nodes', () => {
+    it('creates children in the document of the tree being diffed', () => {
+      const iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      const targetDoc = iframe.contentDocument!;
+      const oldBody = targetDoc.body;
+      mirror.add(oldBody, { ...elementSn, tagName: 'body', id: 1 });
+
+      const rrDocument = new RRDocument();
+      const rrBody = rrDocument.createElement('body');
+      rrDocument.mirror.add(rrBody, { ...elementSn, tagName: 'body', id: 1 });
+      const rrChild = rrDocument.createElement('span');
+      rrBody.appendChild(rrChild);
+      rrDocument.mirror.add(rrChild, { ...elementSn, tagName: 'span', id: 2 });
+      const rrText = rrDocument.createTextNode('text');
+      rrChild.appendChild(rrText);
+      rrDocument.mirror.add(rrText, getDefaultSN(rrText, 3));
+
+      const hostCreateElement = vi.spyOn(document, 'createElement');
+      const hostCreateTextNode = vi.spyOn(document, 'createTextNode');
+      diff(oldBody, rrBody, replayer, rrDocument.mirror);
+
+      const child = mirror.getNode(2) as HTMLElement;
+      expect(child.ownerDocument).toBe(targetDoc);
+      expect(child.firstChild!.ownerDocument).toBe(targetDoc);
+      expect(hostCreateElement).not.toBeCalled();
+      expect(hostCreateTextNode).not.toBeCalled();
+      hostCreateElement.mockRestore();
+      hostCreateTextNode.mockRestore();
     });
   });
 

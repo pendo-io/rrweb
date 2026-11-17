@@ -141,6 +141,7 @@ function diffBeforeUpdatingChildren(
       newTree,
       replayer.mirror,
       rrnodeMirror,
+      nodeDocument(oldTree),
     );
     oldTree.parentNode?.replaceChild(calibratedOldTree, oldTree);
     oldTree = calibratedOldTree;
@@ -457,6 +458,7 @@ function diffChildren(
           newStartNode,
           replayer.mirror,
           rrnodeMirror,
+          nodeDocument(oldTree),
         );
 
         if (
@@ -501,6 +503,7 @@ function diffChildren(
         newChildren[newStartIndex],
         replayer.mirror,
         rrnodeMirror,
+        nodeDocument(oldTree),
       );
       try {
         oldTree.insertBefore(newNode, referenceNode);
@@ -531,10 +534,24 @@ function diffChildren(
   }
 }
 
+/**
+ * The document that owns a real node, so new nodes are created in the same (sandboxed) document.
+ */
+function nodeDocument(node: Node): Document {
+  if (node.nodeType === node.DOCUMENT_NODE) return node as Document;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return node.ownerDocument!;
+}
+
+/**
+ * Get the real node matching an RRNode from the mirror, or create it in `doc`.
+ * `doc` must be the sandboxed document the node will live in, never the host page's document.
+ */
 export function createOrGetNode(
   rrNode: IRRNode,
   domMirror: NodeMirror,
   rrnodeMirror: Mirror,
+  doc: Document,
 ): Node {
   const nodeId = rrnodeMirror.getId(rrNode);
   const sn = rrnodeMirror.getMeta(rrNode);
@@ -547,7 +564,7 @@ export function createOrGetNode(
       node = new Document();
       break;
     case RRNodeType.DocumentType:
-      node = document.implementation.createDocumentType(
+      node = doc.implementation.createDocumentType(
         (rrNode as IRRDocumentType).name,
         (rrNode as IRRDocumentType).publicId,
         (rrNode as IRRDocumentType).systemId,
@@ -557,18 +574,18 @@ export function createOrGetNode(
       let tagName = (rrNode as IRRElement).tagName.toLowerCase();
       tagName = SVGTagMap[tagName] || tagName;
       if (sn && 'isSVG' in sn && sn?.isSVG) {
-        node = document.createElementNS(NAMESPACES['svg'], tagName);
-      } else node = document.createElement((rrNode as IRRElement).tagName);
+        node = doc.createElementNS(NAMESPACES['svg'], tagName);
+      } else node = doc.createElement((rrNode as IRRElement).tagName);
       break;
     }
     case RRNodeType.Text:
-      node = document.createTextNode((rrNode as IRRText).data);
+      node = doc.createTextNode((rrNode as IRRText).data);
       break;
     case RRNodeType.Comment:
-      node = document.createComment((rrNode as IRRComment).data);
+      node = doc.createComment((rrNode as IRRComment).data);
       break;
     case RRNodeType.CDATA:
-      node = document.createCDATASection((rrNode as IRRCDATASection).data);
+      node = doc.createCDATASection((rrNode as IRRCDATASection).data);
       break;
   }
 
