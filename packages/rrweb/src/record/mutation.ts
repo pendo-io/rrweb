@@ -538,6 +538,9 @@ export default class MutationBuffer {
         ) {
           return;
         }
+        if (tagNameLower === 'iframe' && attributeName === 'srcdoc') {
+          return;
+        }
 
         let item = this.attributeMap.get(m.target);
         if (

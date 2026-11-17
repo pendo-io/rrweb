@@ -829,6 +829,10 @@ function serializeElementNode(
     }
     delete attributes.src; // prevent auto loading
   }
+  if (tagName === 'iframe') {
+    // srcdoc is raw, unmasked HTML; the iframe's document is serialized (and masked) separately
+    delete attributes.srcdoc;
+  }
 
   let isCustomElement: true | undefined;
   try {
