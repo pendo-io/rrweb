@@ -256,10 +256,11 @@ export class Replayer {
             }
           },
         };
-        if (this.iframe.contentDocument)
+        const sandboxedDocument = this.iframe.contentDocument;
+        if (sandboxedDocument)
           try {
             diff(
-              this.iframe.contentDocument,
+              sandboxedDocument,
               this.virtualDom,
               replayerHandler,
               this.virtualDom.mirror,
@@ -272,7 +273,10 @@ export class Replayer {
         this.usingVirtualDom = false;
 
         // If these legacy missing nodes haven't been resolved, they should be converted to real Nodes.
-        if (Object.keys(this.legacy_missingNodeRetryMap).length) {
+        if (
+          sandboxedDocument &&
+          Object.keys(this.legacy_missingNodeRetryMap).length
+        ) {
           for (const key in this.legacy_missingNodeRetryMap) {
             try {
               const value = this.legacy_missingNodeRetryMap[key];
@@ -280,6 +284,7 @@ export class Replayer {
                 value.node as RRNode,
                 this.mirror,
                 this.virtualDom.mirror,
+                sandboxedDocument,
               );
               diff(
                 realNode,
