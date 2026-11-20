@@ -9,6 +9,8 @@ import {
   isNativeShadowDom,
   getInputType,
   toLowerCase,
+  hasOpaqueSandbox,
+  forgetSrcdocDocuments,
 } from 'rrweb-snapshot';
 import type { observerParam, MutationBufferParam } from '../types';
 import type {
@@ -175,7 +177,9 @@ export default class MutationBuffer {
     const addedIds = new Set<number>();
 
     while (this.mapRemoves.length) {
-      this.mirror.removeNodeFromMap(this.mapRemoves.shift()!);
+      const removed = this.mapRemoves.shift()!;
+      forgetSrcdocDocuments(removed);
+      this.mirror.removeNodeFromMap(removed);
     }
 
     for (const n of this.movedSet) {
@@ -537,6 +541,17 @@ export default class MutationBuffer {
           value === m.oldValue
         ) {
           return;
+        }
+        if (tagNameLower === 'iframe' && attributeName === 'srcdoc') {
+          return;
+        }
+        if (
+          tagNameLower === 'iframe' &&
+          attributeName === 'sandbox' &&
+          hasOpaqueSandbox(value)
+        ) {
+          if (hasOpaqueSandbox(m.oldValue)) return;
+          value = 'allow-same-origin';
         }
 
         let item = this.attributeMap.get(m.target);
