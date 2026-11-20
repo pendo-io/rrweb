@@ -3,6 +3,7 @@ import {
   slimDOMDefaults,
   type MaskInputOptions,
   createMirror,
+  stopSrcdocDocuments,
 } from 'rrweb-snapshot';
 import {
   initObservers,
@@ -572,8 +573,9 @@ function record<T = eventWithTime>(
     };
 
     iframeManager.addLoadListener((iframeEl) => {
+      if (!iframeEl.contentDocument) return;
       try {
-        iframeHandlersMap.set(iframeEl, observe(iframeEl.contentDocument!));
+        iframeHandlersMap.set(iframeEl, observe(iframeEl.contentDocument));
       } catch (error) {
         // TODO: handle internal error
         console.warn(error);
@@ -642,6 +644,7 @@ function record<T = eventWithTime>(
       });
       iframeHandlersMap.forEach((h) => h());
       processedNodeManager.destroy();
+      stopSrcdocDocuments();
       recording = false;
       unregisterErrorHandler();
     };

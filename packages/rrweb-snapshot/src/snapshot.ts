@@ -360,6 +360,104 @@ function onceIframeLoaded(
   iframeEl.addEventListener('load', listener);
 }
 
+function isUnreadableSrcdocIframe(iframeEl: HTMLIFrameElement): boolean {
+  return !iframeEl.contentDocument && iframeEl.hasAttribute('srcdoc');
+}
+
+export function hasOpaqueSandbox(sandbox: unknown): boolean {
+  return (
+    typeof sandbox === 'string' &&
+    !/(^|\s)allow-same-origin(\s|$)/i.test(sandbox)
+  );
+}
+
+type SrcdocEntry = {
+  mirror: Mirror;
+  serializeDoc: (doc: Document) => serializedNodeWithId | null;
+  onIframeLoad: (
+    iframeNode: HTMLIFrameElement,
+    node: serializedElementNodeWithId,
+  ) => unknown;
+  session: number;
+  srcdoc?: string | null;
+  doc?: Document;
+};
+
+const srcdocIframes = new WeakMap<HTMLIFrameElement, SrcdocEntry>();
+const srcdocLoadListeners = new WeakSet<HTMLIFrameElement>();
+let srcdocSession = 0;
+
+// a sandboxed srcdoc iframe without allow-same-origin hides its document, so record a masked parse of the srcdoc instead
+function attachSrcdocDocument(iframeEl: HTMLIFrameElement, force: boolean) {
+  const entry = srcdocIframes.get(iframeEl);
+  if (
+    !entry ||
+    entry.session !== srcdocSession ||
+    !isUnreadableSrcdocIframe(iframeEl)
+  )
+    return;
+  const srcdoc = iframeEl.getAttribute('srcdoc');
+  if (!force && entry.doc && entry.srcdoc === srcdoc) return;
+  try {
+    const srcdocDoc = new DOMParser().parseFromString(
+      srcdoc as string,
+      'text/html',
+    );
+    const serializedDoc = entry.serializeDoc(srcdocDoc);
+    if (!serializedDoc) return;
+    if (entry.doc) entry.mirror.removeNodeFromMap(entry.doc);
+    entry.srcdoc = srcdoc;
+    entry.doc = srcdocDoc;
+    entry.onIframeLoad(iframeEl, serializedDoc as serializedElementNodeWithId);
+  } catch (e) {
+    //
+  }
+}
+
+function onSrcdocIframeLoaded(
+  iframeEl: HTMLIFrameElement,
+  mirror: Mirror,
+  serializeDoc: SrcdocEntry['serializeDoc'],
+  onIframeLoad: SrcdocEntry['onIframeLoad'],
+) {
+  const entry = srcdocIframes.get(iframeEl) || ({} as SrcdocEntry);
+  srcdocIframes.set(
+    iframeEl,
+    Object.assign(entry, {
+      mirror,
+      serializeDoc,
+      onIframeLoad,
+      session: srcdocSession,
+    }),
+  );
+  nativeSetTimeout(() => attachSrcdocDocument(iframeEl, true), 0);
+  if (!srcdocLoadListeners.has(iframeEl)) {
+    srcdocLoadListeners.add(iframeEl);
+    iframeEl.addEventListener('load', () =>
+      attachSrcdocDocument(iframeEl, false),
+    );
+  }
+}
+
+export function forgetSrcdocDocuments(n: Node) {
+  const iframes =
+    n.nodeName === 'IFRAME'
+      ? [n as HTMLIFrameElement]
+      : (n as Element).querySelectorAll
+      ? Array.from((n as Element).querySelectorAll('iframe'))
+      : [];
+  for (const iframeEl of iframes) {
+    const entry = srcdocIframes.get(iframeEl);
+    if (!entry) continue;
+    if (entry.doc) entry.mirror.removeNodeFromMap(entry.doc);
+    srcdocIframes.delete(iframeEl);
+  }
+}
+
+export function stopSrcdocDocuments() {
+  srcdocSession++;
+}
+
 function onceStylesheetLoaded(
   link: HTMLLinkElement,
   listener: () => unknown,
@@ -829,6 +927,12 @@ function serializeElementNode(
     }
     delete attributes.src; // prevent auto loading
   }
+  if (tagName === 'iframe') {
+    delete attributes.srcdoc; // raw html would bypass masking
+    if (hasOpaqueSandbox(attributes.sandbox)) {
+      attributes.sandbox = 'allow-same-origin'; // replayer must write the attached document into it
+    }
+  }
 
   let isCustomElement: true | undefined;
   try {
@@ -1240,6 +1344,25 @@ export function serializeNodeWithId(
       },
       iframeLoadTimeout,
     );
+    if (onIframeLoad) {
+      onSrcdocIframeLoaded(
+        n as HTMLIFrameElement,
+        mirror,
+        (srcdocDoc) =>
+          serializeNodeWithId(
+            srcdocDoc,
+            Object.assign({}, options, {
+              doc: srcdocDoc,
+              needsMask,
+              skipChild: false,
+              preserveWhiteSpace,
+              newlyAddedElement: false,
+              cssCaptured: false,
+            }),
+          ),
+        onIframeLoad,
+      );
+    }
   }
 
   // <link rel=stylesheet href=...>
