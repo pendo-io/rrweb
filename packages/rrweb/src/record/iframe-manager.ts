@@ -112,7 +112,8 @@ export class IframeManager {
     });
 
     // Receive messages (events) coming from cross-origin iframes that are nested in this same-origin iframe.
-    if (this.recordCrossOriginIframes) {
+    // an attached srcdoc parse leaves contentWindow opaque, so its listeners would throw
+    if (this.recordCrossOriginIframes && iframeEl.contentDocument) {
       iframeEl.contentWindow?.addEventListener(
         'message',
         this.handleMessage.bind(this),

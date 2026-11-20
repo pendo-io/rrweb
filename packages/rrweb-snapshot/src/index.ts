@@ -9,6 +9,9 @@ import snapshot, {
   classMatchesRegex,
   IGNORED_NODE,
   genId,
+  hasOpaqueSandbox,
+  forgetSrcdocDocuments,
+  stopSrcdocDocuments,
 } from './snapshot';
 import rebuild, {
   buildNodeWithSN,
@@ -40,4 +43,7 @@ export {
   classMatchesRegex,
   IGNORED_NODE,
   genId,
+  hasOpaqueSandbox,
+  forgetSrcdocDocuments,
+  stopSrcdocDocuments,
 };
