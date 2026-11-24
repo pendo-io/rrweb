@@ -1809,6 +1809,8 @@ export class Replayer {
         return this.warnNodeNotFound(d, mutation.id);
       }
       for (const attributeName in mutation.attributes) {
+        if (attributeName === 'srcdoc' && target.nodeName === 'IFRAME')
+          continue;
         if (typeof attributeName === 'string') {
           const value = mutation.attributes[attributeName];
           if (value === null) {

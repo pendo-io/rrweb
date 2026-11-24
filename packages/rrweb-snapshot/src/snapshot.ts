@@ -360,6 +360,103 @@ function onceIframeLoaded(
   iframeEl.addEventListener('load', listener);
 }
 
+export function hasOpaqueSandbox(sandbox: unknown): boolean {
+  return (
+    typeof sandbox === 'string' &&
+    !/(^|[\t\n\f\r ])allow-same-origin([\t\n\f\r ]|$)/i.test(sandbox)
+  );
+}
+
+type SrcdocEntry = {
+  mirror: Mirror;
+  serializeDoc: (doc: Document) => serializedNodeWithId | null;
+  onIframeLoad: (
+    iframeNode: HTMLIFrameElement,
+    node: serializedElementNodeWithId,
+  ) => unknown;
+  session: number;
+  srcdoc?: string | null;
+  doc?: Document;
+};
+
+const srcdocIframes = new WeakMap<HTMLIFrameElement, SrcdocEntry>();
+const srcdocLoadListeners = new WeakSet<HTMLIFrameElement>();
+const attachedSrcdocIframes = new Set<HTMLIFrameElement>();
+let srcdocSession = 0;
+
+function dropParsedDocument(entry: SrcdocEntry) {
+  if (!entry.doc) return;
+  entry.doc.querySelectorAll('iframe').forEach(forgetSrcdocDocument);
+  entry.mirror.removeNodeFromMap(entry.doc);
+}
+
+function forgetSrcdocDocument(iframeEl: HTMLIFrameElement) {
+  const entry = srcdocIframes.get(iframeEl);
+  attachedSrcdocIframes.delete(iframeEl);
+  srcdocIframes.delete(iframeEl);
+  if (entry) dropParsedDocument(entry);
+}
+
+function attachSrcdocDocument(iframeEl: HTMLIFrameElement, force: boolean) {
+  const entry = srcdocIframes.get(iframeEl);
+  const srcdoc = iframeEl.getAttribute('srcdoc');
+  if (
+    !entry ||
+    entry.session !== srcdocSession ||
+    iframeEl.contentDocument ||
+    srcdoc === null
+  )
+    return;
+  if (!force && entry.doc && entry.srcdoc === srcdoc) return;
+  try {
+    const srcdocDoc = new DOMParser().parseFromString(srcdoc, 'text/html');
+    const serializedDoc = entry.serializeDoc(srcdocDoc);
+    if (!serializedDoc) return;
+    dropParsedDocument(entry);
+    entry.srcdoc = srcdoc;
+    entry.doc = srcdocDoc;
+    attachedSrcdocIframes.add(iframeEl);
+    entry.onIframeLoad(iframeEl, serializedDoc as serializedElementNodeWithId);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+function onSrcdocIframeLoaded(
+  iframeEl: HTMLIFrameElement,
+  mirror: Mirror,
+  serializeDoc: SrcdocEntry['serializeDoc'],
+  onIframeLoad: SrcdocEntry['onIframeLoad'],
+) {
+  srcdocIframes.set(
+    iframeEl,
+    Object.assign({}, srcdocIframes.get(iframeEl), {
+      mirror,
+      serializeDoc,
+      onIframeLoad,
+      session: srcdocSession,
+    }),
+  );
+  nativeSetTimeout(() => attachSrcdocDocument(iframeEl, true), 0);
+  if (!srcdocLoadListeners.has(iframeEl)) {
+    srcdocLoadListeners.add(iframeEl);
+    iframeEl.addEventListener('load', () =>
+      attachSrcdocDocument(iframeEl, false),
+    );
+  }
+}
+
+export function forgetDetachedSrcdocDocuments() {
+  attachedSrcdocIframes.forEach((iframeEl) => {
+    if (!iframeEl.isConnected) forgetSrcdocDocument(iframeEl);
+  });
+}
+
+export function stopSrcdocDocuments() {
+  srcdocSession++;
+  attachedSrcdocIframes.clear();
+}
+
 function onceStylesheetLoaded(
   link: HTMLLinkElement,
   listener: () => unknown,
@@ -829,6 +926,12 @@ function serializeElementNode(
     }
     delete attributes.src; // prevent auto loading
   }
+  if (tagName === 'iframe') {
+    delete attributes.srcdoc;
+    if (hasOpaqueSandbox(attributes.sandbox)) {
+      attributes.sandbox = 'allow-same-origin';
+    }
+  }
 
   let isCustomElement: true | undefined;
   try {
@@ -1240,6 +1343,28 @@ export function serializeNodeWithId(
       },
       iframeLoadTimeout,
     );
+    if (
+      onIframeLoad &&
+      (n as HTMLIFrameElement).hasAttribute('srcdoc')
+    ) {
+      onSrcdocIframeLoaded(
+        n as HTMLIFrameElement,
+        mirror,
+        (srcdocDoc) =>
+          serializeNodeWithId(
+            srcdocDoc,
+            Object.assign({}, options, {
+              doc: srcdocDoc,
+              needsMask,
+              skipChild: false,
+              preserveWhiteSpace,
+              newlyAddedElement: false,
+              cssCaptured: false,
+            }),
+          ),
+        onIframeLoad,
+      );
+    }
   }
 
   // <link rel=stylesheet href=...>

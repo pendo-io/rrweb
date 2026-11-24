@@ -354,6 +354,10 @@ function buildNode(
           continue;
         }
 
+        if (tagName === 'iframe' && name === 'srcdoc') {
+          continue;
+        }
+
         /**
          * Boolean attributes are considered to be true if they're present on the element at all.
          * We should set value to the empty string ("") or the attribute's name, with no leading or trailing whitespace.

@@ -475,6 +475,27 @@ describe('rebuild', function () {
     });
   });
 
+  describe('iframe srcdoc', function () {
+    it('does not rebuild a recorded srcdoc attribute', function () {
+      const node = buildNodeWithSN(
+        {
+          id: 1,
+          tagName: 'iframe',
+          type: NodeType.Element,
+          attributes: { srcdoc: '<p>raw secret</p>' },
+          childNodes: [],
+        },
+        {
+          doc: document,
+          mirror,
+          hackCss: false,
+          cache,
+        },
+      ) as HTMLIFrameElement;
+      expect(node.hasAttribute('srcdoc')).toBe(false);
+    });
+  });
+
   describe('rr_width/rr_height', function () {
     it('rebuild blocked element with correct dimensions', function () {
       const node = buildNodeWithSN(
