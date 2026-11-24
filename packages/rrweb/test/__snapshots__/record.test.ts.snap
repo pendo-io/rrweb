@@ -3775,9 +3775,7 @@ exports[`record iframes > captures stylesheet mutations in iframes 1`] = `
                   {
                     \\"type\\": 2,
                     \\"tagName\\": \\"iframe\\",
-                    \\"attributes\\": {
-                      \\"srcdoc\\": \\"<button>Mysterious Button</button>\\"
-                    },
+                    \\"attributes\\": {},
                     \\"childNodes\\": [
                       {
                         \\"type\\": 3,
