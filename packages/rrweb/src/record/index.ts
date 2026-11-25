@@ -95,6 +95,7 @@ function record<T = eventWithTime>(
     mousemoveWait,
     recordDOM = true,
     recordCanvas = false,
+    canvasOptions = {},
     recordCrossOriginIframes = false,
     emitFromIframe = false,
     recordAfter = options.recordAfter === 'DOMContentLoaded'
@@ -319,6 +320,7 @@ function record<T = eventWithTime>(
     mirror,
     sampling: sampling.canvas,
     dataURLOptions,
+    canvasOptions,
   });
 
   const shadowDomManager = new ShadowDomManager({
@@ -421,6 +423,7 @@ function record<T = eventWithTime>(
       },
       isCheckout,
     );
+    canvasManager.onFullSnapshot();
     mutationBuffers.forEach((buf) => buf.unlock()); // generate & emit any mutations that happened during snapshotting, as can now apply against the newly built mirror
 
     // Some old browsers don't support adoptedStyleSheets.
