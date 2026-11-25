@@ -50,6 +50,8 @@ export type CanvasOptions = {
   initialSnapshotDelayMs?: number;
   /** Force `preserveDrawingBuffer: true` on WebGL contexts created after record starts. Default true. */
   forcePreserveDrawingBuffer?: boolean;
+  /** Most canvases sampled per page; canvases already sampled keep their slot. Default 5. */
+  maxCanvases?: number;
 };
 
 export type recordOptions<T> = {

@@ -10,15 +10,19 @@ import type {
   CanvasArg,
   DataURLOptions,
   CanvasWorkerResponse,
+  canvasStatusCallback,
+  canvasStatusPayload,
 } from '@rrweb/types';
 import { isBlocked } from '../../../utils';
 import { CanvasContext } from '@rrweb/types';
 import initCanvas2DMutationObserver from './2d';
-import initCanvasContextObserver from './canvas';
+import initCanvasContextObserver, { initWebGLContextTagger } from './canvas';
 import initCanvasWebGLMutationObserver from './webgl';
 import ImageBitmapDataURLWorker from '../../workers/image-bitmap-data-url-worker?worker&inline';
 import { FrameEncoder } from '../../workers/frame-encoder';
 import type { CanvasOptions } from '../../../types';
+
+const DEFAULT_MAX_CANVASES = 5;
 
 export type RafStamps = { latestId: number; invokeId: number | null };
 
@@ -37,6 +41,12 @@ export class CanvasManager {
   private onFullSnapshotCb?: () => void;
   private frozen = false;
   private locked = false;
+  public stopped = false;
+
+  public stop() {
+    this.stopped = true;
+    this.reset();
+  }
 
   public reset() {
     this.pendingCanvasMutations.clear();
@@ -73,6 +83,7 @@ export class CanvasManager {
     sampling?: 'all' | number;
     dataURLOptions: DataURLOptions;
     canvasOptions?: CanvasOptions;
+    statusCb?: canvasStatusCallback;
   }) {
     const {
       sampling = 'all',
@@ -92,6 +103,7 @@ export class CanvasManager {
       this.initCanvasFPSObserver(sampling, win, blockClass, blockSelector, {
         dataURLOptions,
         canvasOptions,
+        statusCb: options.statusCb,
       });
   }
 
@@ -120,25 +132,67 @@ export class CanvasManager {
     options: {
       dataURLOptions: DataURLOptions;
       canvasOptions: CanvasOptions;
+      statusCb?: canvasStatusCallback;
     },
   ) {
-    const { dataURLOptions, canvasOptions } = options;
-    const { workerFactory, fallbackMaxFps = 1 } = canvasOptions;
+    const { dataURLOptions, canvasOptions, statusCb } = options;
+    const {
+      workerFactory,
+      fallbackMaxFps = 1,
+      forcePreserveDrawingBuffer = true,
+      maxCanvases: max,
+    } = canvasOptions;
+    const maxCanvases =
+      (Number.isInteger(max) || max === Infinity) && max! > 0
+        ? max!
+        : DEFAULT_MAX_CANVASES;
     const canvasContextReset = initCanvasContextObserver(
       win,
       blockClass,
       blockSelector,
-      true,
+      forcePreserveDrawingBuffer,
     );
+    const glTaggerReset = initWebGLContextTagger(win);
     const inFlight: Set<number> = new Set();
+    const statuses: Map<number, string> = new Map();
+    let canvases: Map<number, HTMLCanvasElement> = new Map();
     let observedIds: Set<number> = new Set();
     let encoder: FrameEncoder | undefined;
     let stopped = false;
     let busy = false;
 
+    const report = (id: number, reason?: canvasStatusPayload['reason']) => {
+      const status = reason ?? 'readable';
+      const canvas = canvases.get(id);
+      if (stopped || !canvas || (statuses.get(id) ?? 'readable') === status)
+        return;
+      statuses.set(id, status);
+      statusCb?.({
+        id,
+        status: reason ? 'unreadable' : 'readable',
+        reason,
+        context: ((canvas as ICanvas).__context ||
+          'unknown') as canvasStatusPayload['context'],
+        width: canvas.width,
+        height: canvas.height,
+      });
+    };
+
+    const isUnreadableWebGL = (canvas?: HTMLCanvasElement) => {
+      const ctxName = (canvas as ICanvas | undefined)?.__context;
+      if (!canvas || (ctxName !== 'webgl' && ctxName !== 'webgl2'))
+        return false;
+      const gl = canvas.getContext(ctxName) as WebGLRenderingContext | null;
+      return gl?.getContextAttributes()?.preserveDrawingBuffer === false;
+    };
+
     const onResponse = (data: CanvasWorkerResponse) => {
       inFlight.delete(data.id);
+      if (data.status === 'error') return report(data.id, data.reason);
+      if (data.status === 'blank' && isUnreadableWebGL(canvases.get(data.id)))
+        return report(data.id, 'webgl-blank');
       if (stopped || data.status !== 'frame') return;
+      if (statuses.get(data.id) !== 'webgl-blank') report(data.id);
 
       const { id, base64, type, width, height } = data;
       this.mutationCb({
@@ -195,8 +249,10 @@ export class CanvasManager {
       useMainThread();
     }
 
-    this.onFullSnapshotCb = () =>
+    this.onFullSnapshotCb = () => {
+      statuses.clear();
       worker ? worker.postMessage({ kind: 'reset' }) : encoder?.reset();
+    };
 
     let lastSnapshotTime = 0;
     let rafId: number;
@@ -212,12 +268,20 @@ export class CanvasManager {
     };
 
     const snapshotCanvases = async () => {
-      const ids: Set<number> = new Set();
+      canvases = new Map();
       for (const canvas of getCanvas()) {
         const id = this.mirror.getId(canvas);
-        if (id === -1) continue;
-        ids.add(id);
+        if (id !== -1 && canvas.width && canvas.height)
+          canvases.set(id, canvas);
+      }
+      const ids = new Set([...observedIds].filter((id) => canvases.has(id)));
+      for (const id of canvases.keys()) {
+        if (ids.size < maxCanvases) ids.add(id);
+      }
+      for (const id of ids) {
+        const canvas = canvases.get(id)!;
         if (inFlight.has(id)) continue;
+        if (statuses.get(id) === 'tainted') continue;
 
         // The browser throws if the canvas is 0 in size
         // Uncaught (in promise) DOMException: Failed to execute 'createImageBitmap' on 'Window': The source image width is 0.
@@ -226,51 +290,49 @@ export class CanvasManager {
         if (!width || !height || !canvas.isConnected || stopped) continue;
 
         inFlight.add(id);
+        const skipBlank = isUnreadableWebGL(canvas);
         try {
-          if (['webgl', 'webgl2'].includes((canvas as ICanvas).__context)) {
-            // if the canvas hasn't been modified recently,
-            // its contents won't be in memory and `createImageBitmap`
-            // will return a transparent imageBitmap
-
-            const context = canvas.getContext((canvas as ICanvas).__context) as
-              | WebGLRenderingContext
-              | WebGL2RenderingContext
-              | null;
-            if (
-              context?.getContextAttributes()?.preserveDrawingBuffer === false
-            ) {
-              // Hack to load canvas back into memory so `createImageBitmap` can grab it's contents.
-              // Context: https://twitter.com/Juice10/status/1499775271758704643
-              // Preferably we set `preserveDrawingBuffer` to true, but that's not always possible,
-              // especially when canvas is loaded before rrweb.
-              // This hack can wipe the background color of the canvas in the (unlikely) event that
-              // the canvas background was changed but clear was not called directly afterwards.
-              // Example of this hack having negative side effect: https://visgl.github.io/react-map-gl/examples/layers
-              context.clear(context.COLOR_BUFFER_BIT);
-            }
-          }
           const bitmap = await createImageBitmap(canvas);
           if (worker) {
             worker.postMessage(
-              { kind: 'encode', id, bitmap, width, height, dataURLOptions },
+              {
+                kind: 'encode',
+                id,
+                bitmap,
+                width,
+                height,
+                dataURLOptions,
+                skipBlank,
+              },
               [bitmap],
             );
             continue;
           }
           try {
             onResponse(
-              await encoder!.encode(id, bitmap, width, height, dataURLOptions),
+              await encoder!.encode(
+                id,
+                bitmap,
+                width,
+                height,
+                dataURLOptions,
+                skipBlank,
+              ),
             );
           } finally {
             bitmap.close();
           }
-        } catch {
+        } catch (e) {
           inFlight.delete(id);
+          const { name } = e as Error;
+          if (name === 'DataCloneError' || name === 'SecurityError')
+            report(id, 'tainted');
         }
       }
       observedIds.forEach((id) => {
         if (ids.has(id)) return;
         inFlight.delete(id);
+        statuses.delete(id);
         if (worker) worker.postMessage({ kind: 'forget', id });
         else encoder?.forget(id);
       });
@@ -297,7 +359,9 @@ export class CanvasManager {
 
     this.resetObservers = () => {
       stopped = true;
+      this.onFullSnapshotCb = undefined;
       canvasContextReset();
+      glTaggerReset();
       clearTimeout(startTimeout);
       cancelAnimationFrame(rafId);
       worker?.terminate?.();

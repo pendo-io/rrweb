@@ -598,6 +598,7 @@ export type ImageBitmapDataURLWorkerParams = {
   width: number;
   height: number;
   dataURLOptions: DataURLOptions;
+  skipBlank?: boolean;
 };
 
 export type CanvasWorkerRequest =
@@ -618,6 +619,19 @@ export type ImageBitmapDataURLWorkerResponse =
     };
 
 export type CanvasWorkerResponse = ImageBitmapDataURLWorkerResponse;
+
+export const CANVAS_STATUS_TAG = 'rrweb-canvas-status';
+
+export type canvasStatusPayload = {
+  id: number;
+  status: 'unreadable' | 'readable';
+  reason?: 'webgl-blank' | 'tainted' | 'encode-error';
+  context: '2d' | 'webgl' | 'webgl2' | 'bitmaprenderer' | 'unknown';
+  width: number;
+  height: number;
+};
+
+export type canvasStatusCallback = (p: canvasStatusPayload) => void;
 
 export type fontParam = {
   family: string;

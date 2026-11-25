@@ -4,14 +4,17 @@ import { FrameEncoder } from '../../src/record/workers/frame-encoder';
 class FakeCanvas {
   encodes: Array<{ type?: string; quality?: number }> = [];
   types = ['image/webp', 'image/jpeg', 'image/png'];
-  size = [1, 1];
   pixels = '';
+  drawn = false;
+  untouched = '';
+  size = [1, 1];
   get width() {
     return this.size[0];
   }
   set width(w: number) {
     this.size[0] = w;
     this.pixels = '';
+    this.drawn = false;
   }
   get height() {
     return this.size[1];
@@ -19,19 +22,25 @@ class FakeCanvas {
   set height(h: number) {
     this.size[1] = h;
     this.pixels = '';
+    this.drawn = false;
   }
   getContext() {
     return {
-      drawImage: ({ label }: { label: string }) => {
+      drawImage: ({ label = '' }: { label?: string }) => {
         if (label === 'tainted') throw new DOMException('', 'SecurityError');
         this.pixels = label;
+        this.drawn = true;
       },
+      clearRect: () => (this.pixels = ''),
     };
   }
   convertToBlob = async (o: { type?: string; quality?: number }) => {
     this.encodes.push(o);
     const type = this.types.includes(o.type) ? o.type : 'image/png';
-    return new Blob([`${this.width}x${this.height}:${this.pixels}`], { type });
+    const mark = this.drawn ? '' : this.untouched;
+    return new Blob([`${this.width}x${this.height}:${this.pixels}${mark}`], {
+      type,
+    });
   };
 }
 
@@ -42,9 +51,10 @@ const ERROR = { id: 1, status: 'error', reason: 'encode-error' };
 describe('FrameEncoder', () => {
   let canvas: FakeCanvas;
   let encoder: FrameEncoder;
-  const run = (id: number, label: string, w = 10, h = 10, opts = {}) =>
-    encoder.encode(id, { label } as never, w, h, { ...WEBP, ...opts });
+  const run = (id: number, label: string, w = 10, h = 10, opts = {}, skip?) =>
+    encoder.encode(id, { label } as never, w, h, { ...WEBP, ...opts }, skip);
   beforeEach(() => {
+    vi.stubGlobal('OffscreenCanvas', FakeCanvas);
     canvas = new FakeCanvas();
     encoder = new FrameEncoder(canvas);
   });
@@ -56,6 +66,7 @@ describe('FrameEncoder', () => {
     [320, 180, 480, '320x180'],
     [1001, 333, 480, '480x160'],
     [5000, 1, 480, '480x1'],
+    [1, 5000, 480, '1x480'],
     [2000, 1000, undefined, '2000x1000'],
   ])('draws %ix%i with max %s at %s', async (w, h, maxDimension, size) => {
     const frame = await run(1, 'a', w, h, { maxDimension });
@@ -81,16 +92,53 @@ describe('FrameEncoder', () => {
       await run(1, String(quality), 10, 10, { quality });
     }
     const qualities = canvas.encodes.map((e) => e.quality);
-    expect(qualities).toEqual([0.4, 0.4, 1, 0, undefined]);
+    expect(qualities).toEqual([0.4, 0.4, 1, 1, 0, 0, undefined, undefined]);
   });
 
-  it('reports a blank first frame and dedupes until forget or reset', async () => {
+  it('reports blank frames and dedupes until forget or reset', async () => {
     const statuses = [];
     for (const step of ['', '', 'a', 'a', 'forget', 'a', 'reset', 'a']) {
       if (step === 'forget' || step === 'reset') encoder[step](1);
       else statuses.push((await run(1, step)).status);
     }
-    expect(statuses.join()).toBe('blank,unchanged,frame,unchanged,frame,frame');
+    expect(statuses.join()).toBe('blank,blank,frame,unchanged,frame,frame');
+  });
+
+  it.each([
+    [true, 'frame,blank,unchanged,blank,blank,frame,blank,unchanged'],
+    [false, 'frame,frame,frame,frame,unchanged,frame,frame,frame'],
+  ])('skipBlank %s: blank after real frames is %s', async (skip, expected) => {
+    const frames = [];
+    for (const label of ['a', '', 'a', '', '', 'b', '', 'b']) {
+      frames.push(await run(1, label, 10, 10, {}, skip));
+    }
+    expect(frames.map((f) => f.status).join()).toBe(expected);
+    expect([text(frames[0]), text(frames[5])]).toEqual(['10x10:a', '10x10:b']);
+    if (skip) expect(frames[1]).toEqual({ id: 1, status: 'blank' });
+    else expect(text(frames[1])).toBe('10x10:');
+  });
+
+  it('matches a drawn blank frame when untouched canvases encode differently', async () => {
+    canvas.untouched = '?';
+    expect(await run(1, '', 10, 10, {}, true)).toEqual({
+      id: 1,
+      status: 'blank',
+    });
+  });
+
+  it('builds one transparent baseline per size, type and quality', async () => {
+    const statuses = [(await run(1, 'a', 1000, 1000)).status];
+    for (const maxDimension of [480, 100, 480, 100]) {
+      const opts = { maxDimension };
+      statuses.push((await run(1, '', 1000, 1000, opts, true)).status);
+    }
+    const opts = { quality: 0.9 };
+    statuses.push((await run(1, '', 1000, 1000, opts, true)).status);
+    expect(statuses.join()).toBe('frame,blank,blank,blank,blank,blank');
+    expect(canvas.encodes).toHaveLength(9);
+    expect(text(await run(1, 'a', 1000, 1000, { maxDimension: 100 }))).toBe(
+      '100x100:a',
+    );
   });
 
   it('applies forget and reset after encodes already queued', async () => {
@@ -181,6 +229,14 @@ describe('canvas worker', () => {
     }
     const statuses = posted.map((m) => m.status);
     expect(statuses.join()).toBe('frame,unchanged,frame,frame');
+  });
+
+  it('skips blank pictures only when asked', async () => {
+    const blank = () => ({ label: '', close: vi.fn() });
+    await send();
+    await send({ bitmap: blank(), skipBlank: true });
+    await send({ bitmap: blank(), skipBlank: 'yes' });
+    expect(posted.map((m) => m.status).join()).toBe('frame,blank,frame');
   });
 
   it('replies with an error without OffscreenCanvas', async () => {

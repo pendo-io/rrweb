@@ -43,6 +43,7 @@ worker.onmessage = async function (e) {
         data.width as number,
         data.height as number,
         (data.dataURLOptions as DataURLOptions) || {},
+        data.skipBlank === true,
       ),
     );
   } catch {

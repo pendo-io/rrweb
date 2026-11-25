@@ -8,7 +8,9 @@ const ALLOWED_TYPES = [WEBP, 'image/jpeg', PNG];
 export type FrameCanvas = {
   width: number;
   height: number;
-  getContext(id: '2d'): Pick<CanvasRenderingContext2D, 'drawImage'> | null;
+  getContext(
+    id: '2d',
+  ): Pick<CanvasRenderingContext2D, 'drawImage' | 'clearRect'> | null;
   convertToBlob?: (o: { type?: string; quality?: number }) => Promise<Blob>;
   toBlob?: (cb: (b: Blob | null) => void, type?: string, q?: number) => void;
 };
@@ -22,6 +24,11 @@ function fitToMaxDimension(w: number, h: number, max = 0) {
 }
 
 const isSize = (n: number) => typeof n === 'number' && n > 0 && n < Infinity;
+
+const emptyCanvas = (width: number, height: number) =>
+  typeof OffscreenCanvas !== 'undefined'
+    ? new OffscreenCanvas(width, height)
+    : Object.assign(document.createElement('canvas'), { width, height });
 
 export class FrameEncoder {
   private lastBase64: Map<number, string> = new Map();
@@ -37,6 +44,7 @@ export class FrameEncoder {
     width: number,
     height: number,
     { type, quality: q, maxDimension }: DataURLOptions = {},
+    skipBlank = false,
   ): Promise<CanvasWorkerResponse> {
     const previous = this.queue;
     let done: () => void;
@@ -53,24 +61,27 @@ export class FrameEncoder {
       this.canvas.height = size.height;
       const ctx = this.canvas.getContext('2d');
       if (!ctx) throw new Error('no 2d context');
-      const firstFrame = !this.lastBase64.has(id);
       const key = [size.width, size.height, type, quality].join();
-      if (firstFrame && !this.transparentBase64.has(key)) {
+      if (!this.transparentBase64.has(key)) {
+        const empty = emptyCanvas(size.width, size.height);
+        ctx.drawImage(empty, 0, 0, size.width, size.height);
         const blank = await this.toBlob(type, quality);
         this.transparentBase64.set(key, encode(await blank.arrayBuffer()));
       }
+      ctx.clearRect(0, 0, size.width, size.height);
       ctx.drawImage(source, 0, 0, size.width, size.height);
       const blob = await this.toBlob(type, quality);
       if (!ALLOWED_TYPES.includes(blob.type)) throw new TypeError(blob.type);
       const base64 = encode(await blob.arrayBuffer());
 
+      const blank = this.transparentBase64.get(key) === base64;
+      if (blank && (skipBlank || !this.lastBase64.has(id))) {
+        return { id, status: 'blank' };
+      }
       if (this.lastBase64.get(id) === base64) {
         return { id, status: 'unchanged' };
       }
       this.lastBase64.set(id, base64);
-      if (firstFrame && this.transparentBase64.get(key) === base64) {
-        return { id, status: 'blank' };
-      }
       return { id, status: 'frame', type: blob.type, base64, width, height };
     } catch (e) {
       const reason =

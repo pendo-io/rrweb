@@ -62,3 +62,41 @@ export default function initCanvasContextObserver(
     handlers.forEach((h) => h());
   };
 }
+
+const GL_DRAWS = ['clear', 'drawArrays', 'drawElements'];
+const GL2_DRAWS = [
+  ...GL_DRAWS,
+  'drawArraysInstanced',
+  'drawElementsInstanced',
+  'drawRangeElements',
+];
+
+export function initWebGLContextTagger(win: IWindow): listenerHandler {
+  const handlers: listenerHandler[] = [];
+  const targets: Array<[string, { prototype: object } | undefined, string[]]> =
+    [
+      ['webgl', win.WebGLRenderingContext, GL_DRAWS],
+      ['webgl2', win.WebGL2RenderingContext, GL2_DRAWS],
+    ];
+  for (const [ctxName, ctor, methods] of targets) {
+    if (!ctor) continue;
+    for (const method of methods) {
+      handlers.push(
+        patch(ctor.prototype, method, function (original) {
+          return function (
+            this: WebGLRenderingContext,
+            ...args: Array<unknown>
+          ) {
+            if (!('__context' in this.canvas)) {
+              (this.canvas as ICanvas).__context = ctxName;
+            }
+            return (original as (...a: unknown[]) => unknown).apply(this, args);
+          };
+        }),
+      );
+    }
+  }
+  return () => {
+    handlers.forEach((h) => h());
+  };
+}
