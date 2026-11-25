@@ -65,7 +65,8 @@
   },
   "resolutions": {
     "**/cssom": "https://registry.npmjs.org/rrweb-cssom/-/rrweb-cssom-0.6.0.tgz",
-    "**/@types/dom-webcodecs": "0.1.5"
+    "**/@types/dom-webcodecs": "0.1.5",
+    "**/basic-ftp": "^6.2.4"
   },
   "browserslist": [
     "defaults",
