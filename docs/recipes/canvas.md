@@ -33,6 +33,8 @@ record({
 });
 ```
 
+With image snapshots, a WebGL canvas that reads back fully transparent is reported once as `webgl-blank` in the `rrweb-canvas-status` custom event and keeps its last frame in replay. This also happens when the app really clears the canvas to transparent, so a cleared canvas replays as its last drawn frame.
+
 Enable replaying Canvas：
 
 ```js

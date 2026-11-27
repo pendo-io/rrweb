@@ -23,6 +23,7 @@ import {
 } from '../utils';
 import type { recordOptions } from '../types';
 import {
+  CANVAS_STATUS_TAG,
   EventType,
   type eventWithoutTime,
   type eventWithTime,
@@ -31,6 +32,7 @@ import {
   type mutationCallbackParam,
   type scrollCallback,
   type canvasMutationParam,
+  type canvasStatusPayload,
   type adoptedStyleSheetParam,
 } from '@rrweb/types';
 import type { CrossOriginIframeMessageEventContent } from '../types';
@@ -271,6 +273,12 @@ function record<T = eventWithTime>(
       },
     });
 
+  const wrappedCanvasStatusEmit = (payload: canvasStatusPayload) =>
+    wrappedEmit({
+      type: EventType.Custom,
+      data: { tag: CANVAS_STATUS_TAG, payload },
+    });
+
   const wrappedAdoptedStyleSheetEmit = (a: adoptedStyleSheetParam) =>
     wrappedEmit({
       type: EventType.IncrementalSnapshot,
@@ -314,6 +322,7 @@ function record<T = eventWithTime>(
   canvasManager = new CanvasManager({
     recordCanvas,
     mutationCb: wrappedCanvasMutationEmit,
+    statusCb: wrappedCanvasStatusEmit,
     win: window,
     blockClass,
     blockSelector,
@@ -385,7 +394,7 @@ function record<T = eventWithTime>(
       maskInputFn,
       slimDOM: slimDOMOptions,
       dataURLOptions,
-      recordCanvas,
+      recordCanvas: recordCanvas && !canvasManager.stopped,
       inlineImages,
       onSerialize: (n) => {
         if (isSerializedIframe(n, mirror)) {
@@ -679,6 +688,10 @@ record.takeFullSnapshot = (isCheckout?: boolean) => {
     throw new Error('please take full snapshot after start recording');
   }
   takeFullSnapshot(isCheckout);
+};
+
+record.stopCanvas = () => {
+  canvasManager?.stop();
 };
 
 record.mirror = mirror;
