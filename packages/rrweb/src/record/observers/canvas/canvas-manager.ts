@@ -9,6 +9,7 @@ import type {
   listenerHandler,
   CanvasArg,
   DataURLOptions,
+  CanvasWorkerResponse,
 } from '@rrweb/types';
 import { isBlocked } from '../../../utils';
 import { CanvasContext } from '@rrweb/types';
@@ -16,7 +17,8 @@ import initCanvas2DMutationObserver from './2d';
 import initCanvasContextObserver from './canvas';
 import initCanvasWebGLMutationObserver from './webgl';
 import ImageBitmapDataURLWorker from '../../workers/image-bitmap-data-url-worker?worker&inline';
-import type { ImageBitmapDataURLRequestWorker } from '../../workers/image-bitmap-data-url-worker';
+import { FrameEncoder } from '../../workers/frame-encoder';
+import type { CanvasOptions } from '../../../types';
 
 export type RafStamps = { latestId: number; invokeId: number | null };
 
@@ -32,12 +34,17 @@ export class CanvasManager {
 
   private mutationCb: canvasMutationCallback;
   private resetObservers?: listenerHandler;
+  private onFullSnapshotCb?: () => void;
   private frozen = false;
   private locked = false;
 
   public reset() {
     this.pendingCanvasMutations.clear();
     this.resetObservers && this.resetObservers();
+  }
+
+  public onFullSnapshot() {
+    this.onFullSnapshotCb?.();
   }
 
   public freeze() {
@@ -65,6 +72,7 @@ export class CanvasManager {
     mirror: Mirror;
     sampling?: 'all' | number;
     dataURLOptions: DataURLOptions;
+    canvasOptions?: CanvasOptions;
   }) {
     const {
       sampling = 'all',
@@ -73,6 +81,7 @@ export class CanvasManager {
       blockSelector,
       recordCanvas,
       dataURLOptions,
+      canvasOptions = {},
     } = options;
     this.mutationCb = options.mutationCb;
     this.mirror = options.mirror;
@@ -82,6 +91,7 @@ export class CanvasManager {
     if (recordCanvas && typeof sampling === 'number')
       this.initCanvasFPSObserver(sampling, win, blockClass, blockSelector, {
         dataURLOptions,
+        canvasOptions,
       });
   }
 
@@ -109,24 +119,28 @@ export class CanvasManager {
     blockSelector: string | null,
     options: {
       dataURLOptions: DataURLOptions;
+      canvasOptions: CanvasOptions;
     },
   ) {
+    const { dataURLOptions, canvasOptions } = options;
+    const { workerFactory, fallbackMaxFps = 1 } = canvasOptions;
     const canvasContextReset = initCanvasContextObserver(
       win,
       blockClass,
       blockSelector,
       true,
     );
-    const snapshotInProgressMap: Map<number, boolean> = new Map();
-    const worker =
-      new ImageBitmapDataURLWorker() as ImageBitmapDataURLRequestWorker;
-    worker.onmessage = (e) => {
-      const { id } = e.data;
-      snapshotInProgressMap.set(id, false);
+    const inFlight: Set<number> = new Set();
+    let observedIds: Set<number> = new Set();
+    let encoder: FrameEncoder | undefined;
+    let stopped = false;
+    let busy = false;
 
-      if (!('base64' in e.data)) return;
+    const onResponse = (data: CanvasWorkerResponse) => {
+      inFlight.delete(data.id);
+      if (stopped || data.status !== 'frame') return;
 
-      const { base64, type, width, height } = e.data;
+      const { id, base64, type, width, height } = data;
       this.mutationCb({
         id,
         type: CanvasContext['2D'],
@@ -150,13 +164,40 @@ export class CanvasManager {
               } as CanvasArg,
               0,
               0,
+              width,
+              height,
             ],
           },
         ],
       });
     };
 
-    const timeBetweenSnapshots = 1000 / fps;
+    let timeBetweenSnapshots = 1000 / fps;
+    let worker: Worker | undefined;
+    const useMainThread = () => {
+      worker?.terminate?.();
+      worker = undefined;
+      inFlight.clear();
+      encoder = new FrameEncoder(win.document.createElement('canvas'));
+      timeBetweenSnapshots =
+        1000 / Math.min(fps, fallbackMaxFps > 0 ? fallbackMaxFps : 1);
+    };
+    try {
+      worker = workerFactory ? workerFactory() : new ImageBitmapDataURLWorker();
+    } catch {
+      worker = undefined;
+    }
+    if (typeof worker?.postMessage === 'function') {
+      worker.onmessage = (e: MessageEvent<CanvasWorkerResponse>) =>
+        onResponse(e.data);
+      worker.onerror = useMainThread;
+    } else {
+      useMainThread();
+    }
+
+    this.onFullSnapshotCb = () =>
+      worker ? worker.postMessage({ kind: 'reset' }) : encoder?.reset();
+
     let lastSnapshotTime = 0;
     let rafId: number;
 
@@ -170,28 +211,22 @@ export class CanvasManager {
       return matchedCanvas;
     };
 
-    const takeCanvasSnapshots = (timestamp: DOMHighResTimeStamp) => {
-      if (
-        lastSnapshotTime &&
-        timestamp - lastSnapshotTime < timeBetweenSnapshots
-      ) {
-        rafId = requestAnimationFrame(takeCanvasSnapshots);
-        return;
-      }
-      lastSnapshotTime = timestamp;
+    const snapshotCanvases = async () => {
+      const ids: Set<number> = new Set();
+      for (const canvas of getCanvas()) {
+        const id = this.mirror.getId(canvas);
+        if (id === -1) continue;
+        ids.add(id);
+        if (inFlight.has(id)) continue;
 
-      getCanvas()
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        .forEach(async (canvas: HTMLCanvasElement) => {
-          const id = this.mirror.getId(canvas);
-          if (snapshotInProgressMap.get(id)) return;
+        // The browser throws if the canvas is 0 in size
+        // Uncaught (in promise) DOMException: Failed to execute 'createImageBitmap' on 'Window': The source image width is 0.
+        // Assuming the same happens with height
+        const { width, height } = canvas;
+        if (!width || !height || !canvas.isConnected || stopped) continue;
 
-          // The browser throws if the canvas is 0 in size
-          // Uncaught (in promise) DOMException: Failed to execute 'createImageBitmap' on 'Window': The source image width is 0.
-          // Assuming the same happens with height
-          if (canvas.width === 0 || canvas.height === 0) return;
-
-          snapshotInProgressMap.set(id, true);
+        inFlight.add(id);
+        try {
           if (['webgl', 'webgl2'].includes((canvas as ICanvas).__context)) {
             // if the canvas hasn't been modified recently,
             // its contents won't be in memory and `createImageBitmap`
@@ -215,25 +250,57 @@ export class CanvasManager {
             }
           }
           const bitmap = await createImageBitmap(canvas);
-          worker.postMessage(
-            {
-              id,
-              bitmap,
-              width: canvas.width,
-              height: canvas.height,
-              dataURLOptions: options.dataURLOptions,
-            },
-            [bitmap],
-          );
-        });
-      rafId = requestAnimationFrame(takeCanvasSnapshots);
+          if (worker) {
+            worker.postMessage(
+              { kind: 'encode', id, bitmap, width, height, dataURLOptions },
+              [bitmap],
+            );
+            continue;
+          }
+          try {
+            onResponse(
+              await encoder!.encode(id, bitmap, width, height, dataURLOptions),
+            );
+          } finally {
+            bitmap.close();
+          }
+        } catch {
+          inFlight.delete(id);
+        }
+      }
+      observedIds.forEach((id) => {
+        if (ids.has(id)) return;
+        inFlight.delete(id);
+        if (worker) worker.postMessage({ kind: 'forget', id });
+        else encoder?.forget(id);
+      });
+      observedIds = ids;
     };
 
-    rafId = requestAnimationFrame(takeCanvasSnapshots);
+    const takeCanvasSnapshots = (timestamp: DOMHighResTimeStamp) => {
+      rafId = requestAnimationFrame(takeCanvasSnapshots);
+      if (
+        busy ||
+        win.document.visibilityState === 'hidden' ||
+        (lastSnapshotTime &&
+          timestamp - lastSnapshotTime < timeBetweenSnapshots)
+      )
+        return;
+      lastSnapshotTime = timestamp;
+      busy = true;
+      void snapshotCanvases().finally(() => (busy = false));
+    };
+
+    const startTimeout = setTimeout(() => {
+      rafId = requestAnimationFrame(takeCanvasSnapshots);
+    }, canvasOptions.initialSnapshotDelayMs);
 
     this.resetObservers = () => {
+      stopped = true;
       canvasContextReset();
+      clearTimeout(startTimeout);
       cancelAnimationFrame(rafId);
+      worker?.terminate?.();
     };
   }
 

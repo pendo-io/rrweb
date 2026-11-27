@@ -41,6 +41,17 @@ import type {
 } from '@rrweb/types';
 import type ProcessedNodeManager from './record/processed-node-manager';
 
+export type CanvasOptions = {
+  /** Creates the frame encoder worker. Default: the built-in inline worker. Throws or returns no `postMessage`: main-thread fallback. */
+  workerFactory?: () => Worker;
+  /** Highest fps on the main-thread fallback. Default 1. */
+  fallbackMaxFps?: number;
+  /** Delay before the first canvas sample. Default 0. */
+  initialSnapshotDelayMs?: number;
+  /** Force `preserveDrawingBuffer: true` on WebGL contexts created after record starts. Default true. */
+  forcePreserveDrawingBuffer?: boolean;
+};
+
 export type recordOptions<T> = {
   emit?: (e: T, isCheckout?: boolean) => void;
   checkoutEveryNth?: number;
@@ -69,6 +80,7 @@ export type recordOptions<T> = {
   dataURLOptions?: DataURLOptions;
   recordDOM?: boolean;
   recordCanvas?: boolean;
+  canvasOptions?: CanvasOptions;
   recordCrossOriginIframes?: boolean;
   emitFromIframe?: boolean;
   recordAfter?: 'DOMContentLoaded' | 'load';

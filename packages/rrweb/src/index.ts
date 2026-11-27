@@ -20,7 +20,7 @@ export {
 // exports style.css from replay
 import './replay/styles/style.css';
 
-export type { recordOptions, ReplayPlugin } from './types';
+export type { recordOptions, ReplayPlugin, CanvasOptions } from './types';
 
 const { addCustomEvent } = record;
 const { freezePage } = record;
