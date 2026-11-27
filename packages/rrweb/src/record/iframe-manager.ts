@@ -122,6 +122,13 @@ export class IframeManager {
         this.pageHideListener?.(iframeEl);
         this.mirror.removeNodeFromMap(iframeEl.contentDocument!);
         this.crossOriginIframeMap.delete(iframeEl.contentWindow!);
+        // If the next document is on another origin (e.g. about:blank -> https://other.example),
+        // register the iframe again as cross-origin so the child's posted events are accepted.
+        const onNextLoad = () => {
+          iframeEl.removeEventListener('load', onNextLoad);
+          if (!iframeEl.contentDocument) this.addIframe(iframeEl);
+        };
+        iframeEl.addEventListener('load', onNextLoad);
       });
     }
     this.loadListener?.(iframeEl);
