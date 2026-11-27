@@ -592,6 +592,7 @@ export type canvasManagerMutationCallback = (
 ) => void;
 
 export type ImageBitmapDataURLWorkerParams = {
+  kind?: 'encode';
   id: number;
   bitmap: ImageBitmap;
   width: number;
@@ -599,17 +600,24 @@ export type ImageBitmapDataURLWorkerParams = {
   dataURLOptions: DataURLOptions;
 };
 
+export type CanvasWorkerRequest =
+  | ImageBitmapDataURLWorkerParams
+  | { kind: 'forget'; id: number }
+  | { kind: 'reset' };
+
 export type ImageBitmapDataURLWorkerResponse =
+  | { id: number; status: 'unchanged' | 'blank' }
+  | { id: number; status: 'error'; reason: 'tainted' | 'encode-error' }
   | {
       id: number;
-    }
-  | {
-      id: number;
+      status: 'frame';
       type: string;
       base64: string;
       width: number;
       height: number;
     };
+
+export type CanvasWorkerResponse = ImageBitmapDataURLWorkerResponse;
 
 export type fontParam = {
   family: string;
@@ -942,6 +950,7 @@ export interface IMirror<TNode> {
 export type DataURLOptions = Partial<{
   type: string;
   quality: number;
+  maxDimension: number;
 }>;
 
 // Types for @rrweb/packer
